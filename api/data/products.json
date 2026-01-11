@@ -1,0 +1,67 @@
+[
+  {
+    "id": "p1",
+    "name": "Urban Oversized Tee",
+    "description": "Premium cotton oversized t-shirt with street art graphic.",
+    "price": 799,
+    "category": "men",
+    "sub_category": "Street Style",
+    "images": [
+      "/placeholder.jpg"
+    ],
+    "sizes": [
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Black",
+      "White"
+    ],
+    "stock": 50,
+    "shopkeeper_id": "sk1"
+  },
+  {
+    "id": "p2",
+    "name": "Floral Summer Dress",
+    "description": "Lightweight breathable fabric perfect for hot summer days.",
+    "price": 1299,
+    "category": "women",
+    "sub_category": "Summer",
+    "images": [
+      "/placeholder.jpg"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Pink",
+      "Yellow"
+    ],
+    "stock": 30,
+    "shopkeeper_id": "sk1"
+  },
+  {
+    "id": "p3",
+    "name": "Cool Kid Hoodie",
+    "description": "Comfortable hoodie for the little ones.",
+    "price": 999,
+    "category": "kids",
+    "sub_category": "Winter",
+    "images": [
+      "/placeholder.jpg"
+    ],
+    "sizes": [
+      "4-5Y",
+      "6-7Y"
+    ],
+    "colors": [
+      "Blue",
+      "Red"
+    ],
+    "stock": 20,
+    "shopkeeper_id": "sk2"
+  }
+]

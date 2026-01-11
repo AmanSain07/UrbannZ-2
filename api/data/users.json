@@ -1,0 +1,23 @@
+[
+  {
+    "id": "admin1",
+    "name": "Super Admin",
+    "email": "admin@urbanz.com",
+    "role": "admin",
+    "password": "admin"
+  },
+  {
+    "id": "sk1",
+    "name": "Delhi Threads",
+    "email": "shop1@urbanz.com",
+    "role": "shopkeeper",
+    "password": "shop"
+  },
+  {
+    "id": "cust1",
+    "name": "Rahul Sharma",
+    "email": "rahul@gmail.com",
+    "role": "customer",
+    "password": "user"
+  }
+]

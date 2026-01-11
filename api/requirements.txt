@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+# For images later if needed, but keeping it simple for now
