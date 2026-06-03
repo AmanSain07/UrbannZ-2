@@ -36,13 +36,7 @@ export const clearTokens = () => {
 // ---------------------------------------------------------------------------
 // Core Fetch Wrapper with Auto-Refresh
 // ---------------------------------------------------------------------------
-let isRefreshing = false;
-let refreshSubscribers: Array<(token: string) => void> = [];
-
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
+let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken(): Promise<string | null> {
   const refresh = getRefreshToken();
@@ -68,6 +62,7 @@ async function refreshAccessToken(): Promise<string | null> {
     return newAccess;
   } catch {
     clearTokens();
+    window.location.href = "/login";
     return null;
   }
 }
@@ -92,15 +87,13 @@ export async function apiFetch<T = any>(
 
   // Auto-refresh on 401
   if (response.status === 401 && getRefreshToken()) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      const newToken = await refreshAccessToken();
-      isRefreshing = false;
-      if (newToken) onRefreshed(newToken);
+    if (!refreshPromise) {
+      refreshPromise = refreshAccessToken().finally(() => {
+        refreshPromise = null;
+      });
     }
 
-    // Retry with new token
-    const newToken = getAccessToken();
+    const newToken = await refreshPromise;
     if (newToken) {
       headers["Authorization"] = `Bearer ${newToken}`;
       response = await fetch(url, { ...options, headers });
@@ -109,7 +102,18 @@ export async function apiFetch<T = any>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(error.detail || error.message || "API request failed");
+    let errMsg = error.detail || error.message;
+    if (!errMsg && error && typeof error === "object") {
+      errMsg = Object.entries(error)
+        .map(([field, errs]) => {
+          const prefix = field !== "non_field_errors" ? `${field}: ` : "";
+          if (Array.isArray(errs)) return `${prefix}${errs.join(" ")}`;
+          if (typeof errs === "string") return `${prefix}${errs}`;
+          return `${prefix}${JSON.stringify(errs)}`;
+        })
+        .join(" | ");
+    }
+    throw new Error(errMsg || "API request failed");
   }
 
   // Handle 204 No Content
@@ -208,6 +212,34 @@ export async function fetchAllProductsAdmin() {
   return apiFetch("/api/products/admin/all/");
 }
 
+export async function fetchProductById(id: string | number) {
+  return apiFetch(`/api/products/${id}/manage/`);
+}
+
+/**
+ * Upload a file image to an existing product.
+ * Uses multipart/form-data — browser sets the boundary automatically.
+ */
+export async function uploadProductImage(productId: string | number, file: File): Promise<any> {
+  const token = getAccessToken();
+  const formData = new FormData();
+  formData.append("image", file);
+  const res = await fetch(`${API_BASE_URL}/api/products/${productId}/images/`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.detail || err?.image?.[0] || "Image upload failed.");
+  }
+  return res.json();
+}
+
+export async function deleteProductImageAPI(productId: string | number, imageId: string | number) {
+  return apiFetch(`/api/products/${productId}/images/${imageId}/`, { method: "DELETE" });
+}
+
 // ---------------------------------------------------------------------------
 // Category APIs
 // ---------------------------------------------------------------------------
@@ -294,7 +326,7 @@ export async function removeFromWishlistAPI(productId: number) {
 // ---------------------------------------------------------------------------
 // Vendor Application APIs
 // ---------------------------------------------------------------------------
-export async function submitVendorApplication(data: { business_name: string; phone: string; description: string; address: string }) {
+export async function submitVendorApplication(data: { business_name: string; phone: string; description: string; address?: string }) {
   return apiFetch("/api/vendors/apply/", { method: "POST", body: JSON.stringify(data) });
 }
 
@@ -375,3 +407,4 @@ export async function fetchNotifications() {
 export async function markNotificationRead(id: number) {
   return apiFetch(`/api/notifications/${id}/read/`, { method: "POST" });
 }
+

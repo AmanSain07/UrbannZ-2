@@ -25,13 +25,13 @@ export default function BecomeSellerPage() {
   });
 
   // Check existing application status
-  useState(() => {
+  useEffect(() => {
     if (user) {
       fetchMyVendorApplication()
         .then((app: any) => setAppStatus(app.status))
         .catch(() => setAppStatus("idle"));
     }
-  });
+  }, [user]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

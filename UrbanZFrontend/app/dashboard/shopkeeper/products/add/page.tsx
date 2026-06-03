@@ -1,59 +1,80 @@
 "use client";
 
-import { useStore } from "@/lib/store-context";
 import { useAuth } from "@/lib/auth-context";
+import { useStore } from "@/lib/store-context";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Image as ImageIcon, UploadCloud, X } from "lucide-react";
+import { ArrowLeft, Loader2, UploadCloud } from "lucide-react";
 import Link from "next/link";
+import { createProduct, uploadProductImage } from "@/lib/api";
 
 export default function AddProductPage() {
-  const { addProduct } = useStore();
   const { user } = useAuth();
+  const { categories, refreshProducts } = useStore();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [imageType, setImageType] = useState<"url" | "upload">("upload");
+
   const [formData, setFormData] = useState({
     name: "",
     price: "",
-    category: "clothing",
+    category: "",
     description: "",
-    image: "",
+    image_url: "",
     tags: "",
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData({ ...formData, image: reader.result as string });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const removeImage = () => {
-    setFormData({ ...formData, image: "" });
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+    setError(null);
     try {
-      await addProduct({
-        ...formData,
-        price: Number(formData.price),
-        tags: formData.tags.split(",").map(t => t.trim()).filter(Boolean),
-        sellerId: user?.id || "shop1",
-        image: formData.image || "https://images.unsplash.com/photo-1554568218-0f1715e72254?auto=format&fit=crop&q=80"
-      });
+      const payload: any = {
+        name: formData.name.trim(),
+        price: parseFloat(formData.price),
+        description: formData.description.trim(),
+        tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+      };
+      if (formData.category) {
+        const matchedCat = categories.find(
+          (c: any) => c.slug === formData.category || String(c.id) === formData.category
+        );
+        payload.category = matchedCat ? matchedCat.id : formData.category;
+      }
+      if (imageType === "url" && formData.image_url.trim()) {
+        payload.image_url = formData.image_url.trim();
+      }
+
+      // 1. Create product
+      const res = await createProduct(payload);
+      const newProduct = res.product || res;
+
+      // 2. If upload type and selected file, upload it
+      if (imageType === "upload" && selectedFile && newProduct?.id) {
+        await uploadProductImage(newProduct.id, selectedFile);
+      }
+
+      await refreshProducts();
       router.push("/dashboard/shopkeeper/products");
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      setError(err?.message || "Failed to create product.");
     } finally {
       setIsLoading(false);
     }
@@ -67,17 +88,22 @@ export default function AddProductPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-black tracking-tight">Add New Product</h1>
-          <p className="text-muted-foreground">List a new item in your store.</p>
+          <p className="text-muted-foreground">List a new item — admin will review before it goes live.</p>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl text-red-700 dark:text-red-400 text-sm font-medium">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-4 bg-card p-6 rounded-2xl border border-border/50 shadow-sm">
           <h2 className="text-lg font-bold border-b border-border/50 pb-4">Basic Details</h2>
-
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-bold ml-1">Product Name</label>
+              <label className="text-sm font-bold ml-1">Product Name *</label>
               <input
                 required
                 value={formData.name}
@@ -87,11 +113,12 @@ export default function AddProductPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold ml-1">Price (₹)</label>
+              <label className="text-sm font-bold ml-1">Price (₹) *</label>
               <input
                 required
                 type="number"
                 min="0"
+                step="0.01"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 placeholder="0.00"
@@ -99,20 +126,28 @@ export default function AddProductPage() {
               />
             </div>
           </div>
-
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-bold ml-1">Category</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none cursor-pointer"
-              >
-                <option value="clothing">Clothing</option>
-                <option value="shoes">Shoes</option>
-                <option value="accessories">Accessories</option>
-                <option value="tech">Tech</option>
-              </select>
+              {categories.length > 0 ? (
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">Select category...</option>
+                  {categories.map((cat: any) => (
+                    <option key={cat.id} value={cat.slug || cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  placeholder="e.g. clothing"
+                  className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                />
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold ml-1">Tags (comma separated)</label>
@@ -124,9 +159,8 @@ export default function AddProductPage() {
               />
             </div>
           </div>
-
           <div className="space-y-2">
-            <label className="text-sm font-bold ml-1">Description</label>
+            <label className="text-sm font-bold ml-1">Description *</label>
             <textarea
               required
               value={formData.description}
@@ -139,55 +173,80 @@ export default function AddProductPage() {
         </div>
 
         <div className="space-y-4 bg-card p-6 rounded-2xl border border-border/50 shadow-sm">
-          <h2 className="text-lg font-bold border-b border-border/50 pb-4">Product Photo</h2>
-
-          {!formData.image ? (
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full h-48 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-secondary/5 transition-colors"
+          <div className="flex border-b border-border/50 pb-2 mb-2 gap-4">
+            <button
+              type="button"
+              onClick={() => setImageType("upload")}
+              className={`pb-2 font-bold text-sm border-b-2 transition-all ${imageType === "upload" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
             >
-              <UploadCloud className="w-8 h-8 text-muted-foreground" />
-              <div className="text-sm font-bold">Click to upload photo</div>
-              <div className="text-xs text-muted-foreground">JPG, PNG or WEBP (Max 5MB)</div>
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
+              Upload Image File
+            </button>
+            <button
+              type="button"
+              onClick={() => setImageType("url")}
+              className={`pb-2 font-bold text-sm border-b-2 transition-all ${imageType === "url" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+            >
+              Paste Image URL
+            </button>
+          </div>
+
+          {imageType === "upload" ? (
+            <div className="space-y-4">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full h-32 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-secondary/5 transition-colors text-muted-foreground"
+              >
+                <UploadCloud size={28} />
+                <span className="text-sm font-medium">Select image file to upload</span>
+              </div>
+              <input
                 ref={fileInputRef}
-                onChange={handleImageUpload}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
               />
+              {filePreview && (
+                <div className="relative h-48 w-full rounded-xl overflow-hidden bg-secondary/10 border border-border/50">
+                  <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
           ) : (
-            <div className="relative h-64 w-full rounded-xl overflow-hidden bg-secondary/10 border border-border/50 group">
-              <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-              <button 
-                type="button"
-                onClick={removeImage}
-                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-              >
-                <X size={16} />
-              </button>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold ml-1">Image URL</label>
+                <input
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                />
+                <p className="text-xs text-muted-foreground ml-1">Paste a public image URL for your product photo.</p>
+              </div>
+              {formData.image_url && (
+                <div className="relative h-48 w-full rounded-xl overflow-hidden bg-secondary/10 border border-border/50">
+                  <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                </div>
+              )}
             </div>
           )}
         </div>
 
         <div className="flex gap-4 pt-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex-1 py-4 rounded-xl font-bold hover:bg-secondary/20 transition-colors"
-          >
+          <button type="button" onClick={() => router.back()}
+            className="flex-1 py-4 rounded-xl font-bold hover:bg-secondary/20 transition-colors">
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-[2] py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2"
-          >
-            {isLoading ? <Loader2 className="animate-spin" /> : "Create Product"}
+          <button type="submit" disabled={isLoading}
+            className="flex-[2] py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
+            {isLoading ? <Loader2 className="animate-spin" /> : "Submit for Review"}
           </button>
         </div>
       </form>
     </div>
   );
 }
+

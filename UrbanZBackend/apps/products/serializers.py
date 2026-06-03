@@ -17,7 +17,28 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ["id", "src", "order"]
 
     def get_src(self, obj):
-        return obj.get_image()
+        request = self.context.get("request")
+        if obj.image:
+            url = obj.image.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return obj.image_url
+
+
+class ProductImageUploadSerializer(serializers.ModelSerializer):
+    """Accepts a file upload OR a URL string for a product image."""
+    image = serializers.ImageField(required=False)
+    image_url = serializers.URLField(required=False)
+
+    class Meta:
+        model = ProductImage
+        fields = ["id", "image", "image_url", "order"]
+
+    def validate(self, attrs):
+        if not attrs.get("image") and not attrs.get("image_url"):
+            raise serializers.ValidationError("Provide either an image file or an image URL.")
+        return attrs
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -47,7 +68,11 @@ class ProductSerializer(serializers.ModelSerializer):
         """Returns primary image URL — either uploaded or Unsplash URL."""
         first_img = obj.images.first()
         if first_img:
-            return first_img.get_image()
+            request = self.context.get("request")
+            img_url = first_img.get_image()
+            if img_url and img_url.startswith("/") and request:
+                return request.build_absolute_uri(img_url)
+            return img_url
         return obj.image_url or ""
 
 
@@ -63,7 +88,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "name", "price", "description", "category",
             "image_url", "image_urls",
             "gender", "style", "occasion", "tags",
-            "stock_quantity",
+            "stock_quantity", "in_stock",
         ]
 
     def create(self, validated_data):

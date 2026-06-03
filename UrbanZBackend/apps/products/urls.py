@@ -6,6 +6,8 @@ from .views import (
     VendorProductUpdateView,
     VendorMyProductsView,
     ToggleStockView,
+    ProductImageUploadView,
+    ProductImageDeleteView,
     AdminProductListView,
     AdminApproveProductView,
     AdminRejectProductView,
@@ -21,6 +23,8 @@ urlpatterns = [
     path("my-products/", VendorMyProductsView.as_view(), name="product-my"),
     path("<int:pk>/manage/", VendorProductUpdateView.as_view(), name="product-manage"),
     path("<int:pk>/stock/", ToggleStockView.as_view(), name="product-stock-toggle"),
+    path("<int:pk>/images/", ProductImageUploadView.as_view(), name="product-image-upload"),
+    path("<int:pk>/images/<int:img_id>/", ProductImageDeleteView.as_view(), name="product-image-delete"),
 
     # Admin
     path("admin/all/", AdminProductListView.as_view(), name="admin-product-list"),

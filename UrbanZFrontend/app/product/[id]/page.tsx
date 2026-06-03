@@ -3,6 +3,7 @@
 import { useState, use, useEffect } from "react";
 
 import { useStore } from "@/lib/store-context";
+import { fetchProduct } from "@/lib/api";
 import { Star, Truck, ShieldCheck, Heart, Share2, ArrowLeft, RefreshCcw, Info, Minus, Plus, Loader2 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useToast } from "@/components/ui/toast";
@@ -15,10 +16,10 @@ import { useRouter } from "next/navigation";
 import ProductCard from "@/components/product-card";
 
 export default function ProductPage(props: { params: Promise<{ id: string }> }) {
-  // Correctly unwrap params using React.use()
   const params = use(props.params);
-  const { products, addToWishlist, isLoading } = useStore();
-  const product = products.find((p) => String(p.id) === params.id);
+  const { products } = useStore();
+  const [product, setProduct] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   // New States
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -26,38 +27,61 @@ export default function ProductPage(props: { params: Promise<{ id: string }> }) 
   const [activeImage, setActiveImage] = useState<string>("");
   const [isRefundOpen, setIsRefundOpen] = useState(false);
 
-
-
   const { addToCart } = useCart();
   const { toast } = useToast();
   const router = useRouter();
 
-  // Mock colors for now
+  // Fetch product directly from API for fresh data
+  useEffect(() => {
+    setIsLoading(true);
+    fetchProduct(params.id)
+      .then((data: any) => {
+        setProduct(data);
+        // Set initial active image
+        const imgs = data.images?.map((i: any) => i.src).filter(Boolean) || [];
+        const firstImg = imgs[0] || data.image_url || data.image || "";
+        setActiveImage(firstImg);
+      })
+      .catch(() => {
+        // Fallback to store cache
+        const cached = products.find((p) => String(p.id) === params.id);
+        if (cached) {
+          setProduct(cached);
+          const img = Array.isArray(cached.image) ? cached.image[0] : cached.image;
+          setActiveImage(img || "");
+        }
+      })
+      .finally(() => setIsLoading(false));
+  }, [params.id]);
+
+  // Colors from product or defaults
   const colors = ["Black", "White", "Navy", "Beige"];
 
-  // Use the array of images from the product
-  const productImages = product ? (Array.isArray(product.image) ? product.image : [product.image]) : [];
+  // Product images — support both API shapes (images[] array from backend, or single image string)
+  const productImages: string[] = product
+    ? [
+        ...(product.images?.map((i: any) => i.src || i.image_url || "").filter(Boolean) || []),
+        ...(product.image_url && !product.images?.length ? [product.image_url] : []),
+        ...(product.image && typeof product.image === "string" ? [product.image] : []),
+      ].filter(Boolean)
+    : [];
 
-  // Set initial image safely
-  useEffect(() => {
-    if (productImages.length > 0 && !activeImage) {
-      setActiveImage(productImages[0]);
-    }
-  }, [product, productImages, activeImage]);
+  const addToWishlist = (p: any) => {}; // Wishlist not implemented in current backend
 
   const handleAddToCart = () => {
     if (!product || !selectedSize || !selectedColor) {
       toast("Please select both size and color!", "error");
       return;
     }
+
     addToCart({
       productId: String(product.id),
       name: product.name,
-      price: product.price,
+      price: parseFloat(product.price),
       quantity: quantity,
       size: selectedSize,
       color: selectedColor,
-      image: Array.isArray(product.image) ? product.image[0] : product.image
+      image: productImages[0] || ""
     });
     toast("Added to cart successfully!");
   };
@@ -70,11 +94,11 @@ export default function ProductPage(props: { params: Promise<{ id: string }> }) 
     addToCart({
       productId: String(product.id),
       name: product.name,
-      price: product.price,
+      price: parseFloat(product.price),
       quantity: quantity,
       size: selectedSize,
       color: selectedColor,
-      image: Array.isArray(product.image) ? product.image[0] : product.image
+      image: productImages[0] || ""
     });
     router.push("/cart");
   };
@@ -100,7 +124,12 @@ export default function ProductPage(props: { params: Promise<{ id: string }> }) 
   }
 
   const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
+    .filter(p => {
+      const pCat = String(p.category || "").toLowerCase();
+      const prodCat = String(product.category || "").toLowerCase();
+      const prodCatName = String(product.category_name || "").toLowerCase();
+      return (pCat === prodCat || pCat === prodCatName) && String(p.id) !== String(product.id);
+    })
     .slice(0, 4);
 
   return (

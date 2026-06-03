@@ -28,9 +28,12 @@ function ShopContent() {
     // Filter for approved items first
     let result = allProducts.filter(p => p.status === 'approved');
 
-    // 1. Filter by Category
+    // 1. Filter by Category — backend returns category_name on products
     if (category) {
-      result = result.filter(p => p.category?.toLowerCase() === category.toLowerCase());
+      result = result.filter(p =>
+        (p as any).category_name?.toLowerCase() === category.toLowerCase() ||
+        (p as any).category?.toLowerCase() === category.toLowerCase()
+      );
     }
 
     // 2. Filter by Tag (e.g. Vintage)

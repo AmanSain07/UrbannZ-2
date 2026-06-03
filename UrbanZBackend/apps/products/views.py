@@ -14,11 +14,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.accounts.permissions import IsAdmin, IsVendor, IsOwnerOrAdmin
 from apps.notifications.utils import create_notification
-from .models import Product, Category
+from .models import Product, Category, ProductImage
 from .serializers import (
     ProductSerializer,
     ProductCreateSerializer,
     CategorySerializer,
+    ProductImageUploadSerializer,
 )
 
 
@@ -140,6 +141,56 @@ class ToggleStockView(APIView):
         product.save()
         return Response({"in_stock": product.in_stock, "message": f"Stock set to {'available' if product.in_stock else 'unavailable'}."})
 
+
+class ProductImageUploadView(APIView):
+    """
+    POST /api/products/{pk}/images/ — Upload an image file or add image URL to a product.
+    DELETE /api/products/{pk}/images/{img_id}/ — Delete a product image.
+    """
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def post(self, request, pk):
+        try:
+            product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        self.check_object_permissions(request, product)
+
+        serializer = ProductImageUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        order = product.images.count()
+        img = ProductImage.objects.create(
+            product=product,
+            image=serializer.validated_data.get("image"),
+            image_url=serializer.validated_data.get("image_url", ""),
+            order=order,
+        )
+
+        src = request.build_absolute_uri(img.image.url) if img.image else img.image_url
+        return Response({"id": img.id, "src": src, "order": img.order}, status=status.HTTP_201_CREATED)
+
+
+class ProductImageDeleteView(APIView):
+    """DELETE /api/products/{pk}/images/{img_id}/"""
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def delete(self, request, pk, img_id):
+        try:
+            product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        self.check_object_permissions(request, product)
+
+        try:
+            img = ProductImage.objects.get(pk=img_id, product=product)
+        except ProductImage.DoesNotExist:
+            return Response({"detail": "Image not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        img.delete()
+        return Response({"message": "Image deleted."}, status=status.HTTP_204_NO_CONTENT)
 
 # ---------------------------------------------------------------------------
 # Admin Product Views

@@ -5,7 +5,7 @@ import { User, Mail, Phone, Save, Lock, Loader2, CheckCircle } from "lucide-reac
 import { useAuth } from "@/lib/auth-context";
 import { updateProfile, changePassword } from "@/lib/api";
 
-export default function SettingsPage() {
+export default function AdminSettingsPage() {
   const { user, refreshUser } = useAuth();
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
@@ -23,9 +23,7 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    if (user) {
-      setProfileForm({ name: user.name || "", phone: "" });
-    }
+    if (user) setProfileForm({ name: user.name || "", phone: "" });
   }, [user]);
 
   const handleProfileSave = async (e: React.FormEvent) => {
@@ -71,8 +69,8 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 pb-20">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your profile and account security.</p>
+        <h1 className="text-3xl font-black tracking-tight">Admin Settings</h1>
+        <p className="text-muted-foreground">Manage your admin profile and account security.</p>
       </div>
 
       {/* Profile Section */}
@@ -113,7 +111,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold uppercase text-muted-foreground pl-1">Phone Number</label>
+          <label className="text-xs font-bold uppercase text-muted-foreground pl-1">Phone</label>
           <div className="relative">
             <Phone className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
             <input
@@ -153,15 +151,17 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {["old_password", "new_password", "confirm_new_password"].map((field) => (
-          <div key={field} className="space-y-2">
-            <label className="text-xs font-bold uppercase text-muted-foreground pl-1">
-              {field === "old_password" ? "Current Password" : field === "new_password" ? "New Password" : "Confirm New Password"}
-            </label>
+        {[
+          { key: "old_password", label: "Current Password" },
+          { key: "new_password", label: "New Password" },
+          { key: "confirm_new_password", label: "Confirm New Password" },
+        ].map(({ key, label }) => (
+          <div key={key} className="space-y-2">
+            <label className="text-xs font-bold uppercase text-muted-foreground pl-1">{label}</label>
             <input
               type="password"
-              value={(passwordForm as any)[field]}
-              onChange={(e) => setPasswordForm({ ...passwordForm, [field]: e.target.value })}
+              value={(passwordForm as any)[key]}
+              onChange={(e) => setPasswordForm({ ...passwordForm, [key]: e.target.value })}
               required
               className="w-full bg-secondary/10 rounded-xl py-2.5 px-4 font-medium border border-border/50 focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all outline-none"
               placeholder="••••••••"
