@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "upload.wikimedia.org",
       },
+      {
+        // Railway backend — allows any subdomain of railway.app
+        protocol: "https",
+        hostname: "*.up.railway.app",
+      },
     ],
   },
 };

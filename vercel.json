@@ -1,6 +1,15 @@
 {
-  "buildCommand": "cd UrbanZFrontend && npm install && npm run build",
-  "outputDirectory": "UrbanZFrontend/.next",
-  "installCommand": "cd UrbanZFrontend && npm install",
-  "framework": "nextjs"
+  "version": 2,
+  "builds": [
+    {
+      "src": "UrbanZFrontend/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "UrbanZFrontend/$1"
+    }
+  ]
 }
