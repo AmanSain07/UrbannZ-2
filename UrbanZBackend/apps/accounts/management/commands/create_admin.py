@@ -10,7 +10,7 @@ User = get_user_model()
 
 ADMIN_EMAIL = "admin@urbanz.com"
 ADMIN_NAME = "UrbanZ Admin"
-ADMIN_PASSWORD = "TempAdmin123!"
+ADMIN_PASSWORD = "admin@123"
 
 
 class Command(BaseCommand):
