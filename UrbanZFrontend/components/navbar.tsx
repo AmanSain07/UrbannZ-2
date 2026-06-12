@@ -14,7 +14,7 @@ import MagneticButton from "./ui/magnetic-button";
 import dynamic from "next/dynamic";
 
 const LogoutModal = dynamic(() => import("./logout-modal"), { ssr: false });
-
+import UserDropdown from "./user-dropdown";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -122,29 +122,16 @@ export default function Navbar() {
 
 
           <div className="flex items-center gap-2">
-            <MagneticButton>
-              <Link href={
-                !user ? "/login" :
-                  user.role === "admin" ? "/dashboard/admin" :
-                    user.role === "shopkeeper" ? "/dashboard/shopkeeper" :
-                      "/dashboard"
-              }>
-                <button className="rounded-full size-9 flex items-center justify-center hover:bg-secondary/20 transition-colors relative">
-                  <User className="h-5 w-5" />
-                  {user && (
-                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-green-500 border border-white"></span>
-                  )}
-                </button>
-              </Link>
-            </MagneticButton>
-
-            {user && (
-              <button
-                onClick={() => setIsLogoutModalOpen(true)}
-                className="hidden md:block text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 py-1.5 rounded-full border border-red-100 dark:border-red-900 transition-colors"
-              >
-                Logout
-              </button>
+            {!user ? (
+              <MagneticButton>
+                <Link href="/login">
+                  <button className="rounded-full size-9 flex items-center justify-center hover:bg-secondary/20 transition-colors relative">
+                    <User className="h-5 w-5" />
+                  </button>
+                </Link>
+              </MagneticButton>
+            ) : (
+              <UserDropdown user={user} onLogoutClick={() => setIsLogoutModalOpen(true)} />
             )}
           </div>
 
@@ -168,15 +155,23 @@ export default function Navbar() {
             <Link href="/custom" className="text-foreground" onClick={() => setIsOpen(false)}>Custom</Link>
             <Link href="/help" className="text-foreground" onClick={() => setIsOpen(false)}>Help</Link>
             {user && (
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  setIsLogoutModalOpen(true);
-                }}
-                className="text-left text-red-500 font-bold"
-              >
-                Logout
-              </button>
+              <>
+                <Link href="/profile" className="text-foreground font-bold" onClick={() => setIsOpen(false)}>My Profile</Link>
+                <Link href={
+                  user.role === "admin" ? "/dashboard/admin" :
+                  user.role === "shopkeeper" ? "/dashboard/shopkeeper" :
+                  "/dashboard/customer"
+                } className="text-foreground font-bold" onClick={() => setIsOpen(false)}>Dashboard</Link>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsLogoutModalOpen(true);
+                  }}
+                  className="text-left text-red-500 font-bold mt-2 pt-2 border-t border-border/50"
+                >
+                  Logout
+                </button>
+              </>
             )}
           </nav>
         </motion.div>
