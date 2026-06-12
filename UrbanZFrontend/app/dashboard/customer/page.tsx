@@ -3,8 +3,8 @@
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Package, Truck, Clock, CheckCircle, Loader2, User as UserIcon, Mail, Phone, Save, Lock } from "lucide-react";
-import { fetchMyOrders, updateProfile, changePassword } from "@/lib/api";
+import { Package, Truck, Clock, CheckCircle, Loader2, User as UserIcon, Mail, Phone, Save, Lock, Camera } from "lucide-react";
+import { fetchMyOrders, updateProfile, changePassword, uploadAvatarAPI } from "@/lib/api";
 
 type Order = {
   id: string | number;
@@ -77,6 +77,24 @@ export default function CustomerDashboard() {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProfileLoading(true);
+    setProfileError(null);
+    setProfileSaved(false);
+    try {
+      await uploadAvatarAPI(file);
+      await refreshUser();
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 3000);
+    } catch (err: any) {
+      setProfileError(err?.message || "Failed to upload photo.");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const handlePasswordSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordForm.new_password !== passwordForm.confirm_new_password) {
@@ -109,6 +127,12 @@ export default function CustomerDashboard() {
   const userInitials = user.name
     ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
+
+  const avatarSrc = user.avatar
+    ? user.avatar.startsWith("http")
+      ? user.avatar
+      : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}${user.avatar}`
+    : null;
 
   return (
     <div className="container px-4 py-10 max-w-5xl mx-auto space-y-8">
@@ -143,8 +167,12 @@ export default function CustomerDashboard() {
       {activeTab === "orders" ? (
         <div className="space-y-6">
           <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-sm flex items-center gap-6">
-            <div className="size-16 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-2xl">
-              {userInitials}
+            <div className="size-16 rounded-full overflow-hidden bg-primary/10 text-primary flex items-center justify-center font-bold text-2xl relative">
+              {avatarSrc ? (
+                <img src={avatarSrc} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                userInitials
+              )}
             </div>
             <div>
               <h2 className="text-xl font-bold">{user.name}</h2>
@@ -235,9 +263,28 @@ export default function CustomerDashboard() {
           {/* Left: Quick Profile Summary Card */}
           <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm space-y-6">
             <div className="flex flex-col items-center text-center space-y-4 py-4">
-              <div className="size-24 rounded-full bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center font-bold text-4xl shadow-xl shadow-primary/10">
-                {userInitials}
+              <div className="relative group size-24">
+                <div className="size-24 rounded-full overflow-hidden bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center font-bold text-4xl shadow-xl shadow-primary/10">
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    userInitials
+                  )}
+                </div>
+                
+                {/* Photo Upload Overlay */}
+                <label className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[10px] font-bold">
+                  <Camera size={18} className="mb-1" />
+                  Upload Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                </label>
               </div>
+
               <div>
                 <h2 className="text-2xl font-black">{user.name}</h2>
                 <p className="text-sm text-muted-foreground font-medium">{user.email}</p>

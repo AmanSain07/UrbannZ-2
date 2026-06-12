@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User as UserIcon, Mail, Phone, Save, Lock, Loader2, CheckCircle, Store, ShieldAlert, Award } from "lucide-react";
+import { User as UserIcon, Mail, Phone, Save, Lock, Loader2, CheckCircle, Store, ShieldAlert, Award, Camera } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { updateProfile, changePassword } from "@/lib/api";
+import { updateProfile, changePassword, uploadAvatarAPI } from "@/lib/api";
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
@@ -45,6 +45,24 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProfileLoading(true);
+    setProfileError(null);
+    setProfileSaved(false);
+    try {
+      await uploadAvatarAPI(file);
+      await refreshUser();
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 3000);
+    } catch (err: any) {
+      setProfileError(err?.message || "Failed to upload photo.");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const handlePasswordSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordForm.new_password !== passwordForm.confirm_new_password) {
@@ -72,6 +90,12 @@ export default function SettingsPage() {
     ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "V";
 
+  const avatarSrc = user.avatar
+    ? user.avatar.startsWith("http")
+      ? user.avatar
+      : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}${user.avatar}`
+    : null;
+
   return (
     <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-350">
       <div>
@@ -83,9 +107,28 @@ export default function SettingsPage() {
         {/* Left: Seller Card & Quick Info */}
         <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="flex flex-col items-center text-center space-y-4 py-4">
-            <div className="size-24 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 text-white flex items-center justify-center font-bold text-4xl shadow-xl shadow-orange-500/10">
-              {initials}
+            <div className="relative group size-24">
+              <div className="size-24 rounded-full overflow-hidden bg-gradient-to-tr from-orange-500 to-amber-400 text-white flex items-center justify-center font-bold text-4xl shadow-xl shadow-orange-500/10">
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
+              </div>
+              
+              {/* Photo Upload Overlay */}
+              <label className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[10px] font-bold">
+                <Camera size={18} className="mb-1" />
+                Upload Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
+              </label>
             </div>
+
             <div>
               <h2 className="text-2xl font-black">{user.name}</h2>
               <p className="text-sm text-muted-foreground font-medium">{user.email}</p>

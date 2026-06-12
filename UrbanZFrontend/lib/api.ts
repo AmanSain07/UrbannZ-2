@@ -157,6 +157,22 @@ export async function updateProfile(data: Partial<{ name: string; phone: string 
   });
 }
 
+export async function uploadAvatarAPI(file: File): Promise<any> {
+  const token = getAccessToken();
+  const formData = new FormData();
+  formData.append("avatar", file);
+  const res = await fetch(`${API_BASE_URL}/api/auth/profile/`, {
+    method: "PATCH",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.detail || err?.avatar?.[0] || "Avatar upload failed.");
+  }
+  return res.json();
+}
+
 export async function changePassword(data: { old_password: string; new_password: string; confirm_new_password: string }) {
   return apiFetch("/api/auth/change-password/", {
     method: "POST",
