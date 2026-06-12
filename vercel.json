@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd UrbanZFrontend && npm install && npm run build",
+  "outputDirectory": "UrbanZFrontend/.next",
+  "installCommand": "cd UrbanZFrontend && npm install",
+  "framework": "nextjs"
+}
