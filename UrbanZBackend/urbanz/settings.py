@@ -157,6 +157,24 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # ---------------------------------------------------------------------------
+# CSRF Trusted Origins — required for Django 4.0+ in production
+# ---------------------------------------------------------------------------
+CSRF_TRUSTED_ORIGINS = [
+    "https://urbanz-backend-production.up.railway.app",
+    "https://*.up.railway.app",
+    "https://urbanz-frontend.vercel.app",
+    "https://*.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+]
+
+# Ensure CSRF cookie is sent over HTTPS in production
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# ---------------------------------------------------------------------------
 # Django REST Framework
 # ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
