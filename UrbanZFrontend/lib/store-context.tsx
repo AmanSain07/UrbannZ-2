@@ -185,74 +185,90 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   // ---------------------------------------------------------------------------
   // Initial Data Load
   // ---------------------------------------------------------------------------
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Always load public products and categories
-      const [productsData, categoriesData] = await Promise.allSettled([
-        fetchProducts(),
-        fetchCategories(),
-      ]);
+  useEffect(() => {
+    let isMounted = true;
 
-      if (productsData.status === "fulfilled") {
-        const results = productsData.value?.results || productsData.value || [];
-        setProducts(Array.isArray(results) ? results.map(mapProduct) : []);
-      }
-
-      if (categoriesData.status === "fulfilled") {
-        setCategories(categoriesData.value || []);
-      }
-
-      // Role-specific data
-      if (authUser?.role === "admin") {
-        const [allProducts, allUsers, allOrders] = await Promise.allSettled([
-          fetchAllProductsAdmin(),
-          fetchAllUsers(),
-          fetchVendorOrders(), // Admin sees all orders
+    const loadData = async () => {
+      if (!isMounted) return;
+      setIsLoading(true);
+      try {
+        // Always load public products and categories
+        const [productsData, categoriesData] = await Promise.allSettled([
+          fetchProducts(),
+          fetchCategories(),
         ]);
 
-        if (allProducts.status === "fulfilled") {
-          const results = allProducts.value?.results || allProducts.value || [];
+        if (!isMounted) return;
+
+        if (productsData.status === "fulfilled") {
+          const results = productsData.value?.results || productsData.value || [];
           setProducts(Array.isArray(results) ? results.map(mapProduct) : []);
         }
-        if (allUsers.status === "fulfilled") {
-          const results = allUsers.value?.results || allUsers.value || [];
-          setUsers(Array.isArray(results) ? results.map(mapUser) : []);
-        }
-        if (allOrders.status === "fulfilled") {
-          const results = allOrders.value?.results || allOrders.value || [];
-          setOrders(Array.isArray(results) ? results.map(mapOrder) : []);
-        }
-      } else if (authUser?.role === "shopkeeper") {
-        const [myOrders] = await Promise.allSettled([fetchVendorOrders()]);
-        if (myOrders.status === "fulfilled") {
-          const results = myOrders.value?.results || myOrders.value || [];
-          setOrders(Array.isArray(results) ? results.map(mapOrder) : []);
-        }
-      } else if (authUser?.role === "customer") {
-        const [myOrders] = await Promise.allSettled([fetchMyOrders()]);
-        if (myOrders.status === "fulfilled") {
-          const results = myOrders.value?.results || myOrders.value || [];
-          setOrders(Array.isArray(results) ? results.map(mapOrder) : []);
-        }
-      }
-    } catch (e) {
-      console.error("StoreContext load error:", e);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [authUser?.role]);
 
-  useEffect(() => {
+        if (categoriesData.status === "fulfilled") {
+          setCategories(categoriesData.value || []);
+        }
+
+        // Role-specific data
+        if (authUser?.role === "admin") {
+          const [allProducts, allUsers, allOrders] = await Promise.allSettled([
+            fetchAllProductsAdmin(),
+            fetchAllUsers(),
+            fetchVendorOrders(), // Admin sees all orders
+          ]);
+
+          if (!isMounted) return;
+
+          if (allProducts.status === "fulfilled") {
+            const results = allProducts.value?.results || allProducts.value || [];
+            setProducts(Array.isArray(results) ? results.map(mapProduct) : []);
+          }
+          if (allUsers.status === "fulfilled") {
+            const results = allUsers.value?.results || allUsers.value || [];
+            setUsers(Array.isArray(results) ? results.map(mapUser) : []);
+          }
+          if (allOrders.status === "fulfilled") {
+            const results = allOrders.value?.results || allOrders.value || [];
+            setOrders(Array.isArray(results) ? results.map(mapOrder) : []);
+          }
+        } else if (authUser?.role === "shopkeeper") {
+          const [myOrders] = await Promise.allSettled([fetchVendorOrders()]);
+          if (!isMounted) return;
+          if (myOrders.status === "fulfilled") {
+            const results = myOrders.value?.results || myOrders.value || [];
+            setOrders(Array.isArray(results) ? results.map(mapOrder) : []);
+          }
+        } else if (authUser?.role === "customer") {
+          const [myOrders] = await Promise.allSettled([fetchMyOrders()]);
+          if (!isMounted) return;
+          if (myOrders.status === "fulfilled") {
+            const results = myOrders.value?.results || myOrders.value || [];
+            setOrders(Array.isArray(results) ? results.map(mapOrder) : []);
+          }
+        }
+      } catch (e) {
+        console.error("StoreContext load error:", e);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
     loadData();
-  }, [loadData]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser?.role]);
 
   const refreshProducts = useCallback(async () => {
     try {
       const data = authUser?.role === "admin" ? await fetchAllProductsAdmin() : await fetchProducts();
       const results = data?.results || data || [];
-      setProducts(Array.isArray(results) ? results.map(mapProduct) : []);
-    } catch {}
+      const mappedProducts = Array.isArray(results) ? results.map(mapProduct) : [];
+      setProducts(mappedProducts);
+    } catch (e) {
+      console.error("Error refreshing products:", e);
+    }
   }, [authUser?.role]);
 
   // ---------------------------------------------------------------------------

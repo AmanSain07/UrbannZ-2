@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { Providers } from "./providers";
 import dynamic from "next/dynamic";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const Mascot = dynamic(() => import("@/components/mascot"));
 const CustomCursor = dynamic(() => import("@/components/ui/custom-cursor"));
@@ -26,16 +27,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(outfit.variable, "font-sans antialiased bg-background text-foreground min-h-screen flex flex-col")}>
-        <Providers>
-          <CustomCursor />
-          <Navbar />
+        <ErrorBoundary>
+          <Providers>
+            <CustomCursor />
+            <Navbar />
 
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Mascot />
-          <Footer />
-        </Providers>
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Mascot />
+            <Footer />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

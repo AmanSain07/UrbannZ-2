@@ -195,7 +195,7 @@ export default function ProductPage(props: { params: Promise<{ id: string }> }) 
                 <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider">
                   {product.category}
                 </span>
-                {product.badges?.map((badge, idx) => (
+                {product.badges?.map((badge: string, idx: number) => (
                   <span key={idx} className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-bold flex items-center gap-1">
                     <Star size={12} className="fill-current" /> {badge}
                   </span>
@@ -356,7 +356,7 @@ export default function ProductPage(props: { params: Promise<{ id: string }> }) 
             <div>
               <h2 className="text-3xl font-black mb-6">Product Highlights</h2>
               <ul className="grid sm:grid-cols-2 gap-4">
-                {product.highlights?.map((highlight, idx) => (
+                {product.highlights?.map((highlight: string, idx: number) => (
                   <li key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-secondary/5 border border-secondary/10">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Star className="w-4 h-4 text-primary fill-current" />

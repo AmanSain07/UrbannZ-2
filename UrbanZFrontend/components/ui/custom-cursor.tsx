@@ -30,16 +30,23 @@ const CustomCursor = () => {
       );
     };
     checkTouch();
-    window.addEventListener("resize", checkTouch);
+    const resizeListener = () => checkTouch();
+    window.addEventListener("resize", resizeListener);
 
+    let rafId: number | null = null;
     const moveCursor = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        mouseX.set(e.clientX);
+        mouseY.set(e.clientY);
+        rafId = null;
+      });
     };
-    window.addEventListener("mousemove", moveCursor);
+    window.addEventListener("mousemove", moveCursor, { passive: true });
 
     return () => {
-      window.removeEventListener("resize", checkTouch);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", resizeListener);
       window.removeEventListener("mousemove", moveCursor);
     };
   }, [mouseX, mouseY]);

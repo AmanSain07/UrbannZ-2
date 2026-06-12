@@ -22,7 +22,7 @@ export default function HiddenAdminLogin() {
     // Simple mock check to ensure "security" for the demo
     if (email === "admin@urbanz.com" && password === "admin123") {
       try {
-        await login(email); // In real app, this would verify password too
+        await login(email, password); // In real app, this would verify password too
         router.push("/dashboard/admin");
       } catch (err) {
         setError("Login failed. System error.");
