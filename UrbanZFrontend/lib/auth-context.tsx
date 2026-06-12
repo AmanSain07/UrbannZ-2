@@ -39,6 +39,7 @@ export type User = {
   backendRole: UserRole; // Actual backend role
   phone?: string;
   avatar?: string | null;
+  created_at?: string;
   storeDetails?: { storeName?: string; [key: string]: any };
 };
 
@@ -92,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         backendRole: profile.role,
         phone: profile.phone,
         avatar: profile.avatar,
+        created_at: profile.created_at,
       };
       setUser(mappedUser);
       localStorage.setItem("urbanz_user", JSON.stringify(mappedUser));
@@ -128,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: userData.email,
       role: mapRole(userData.role),
       backendRole: userData.role,
+      created_at: userData.created_at,
     };
 
     setUser(mappedUser);
@@ -154,6 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: userData.email,
       role: mapRole(userData.role),
       backendRole: userData.role,
+      created_at: userData.created_at,
     };
 
     setUser(mappedUser);
@@ -191,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         backendRole: profile.role,
         phone: profile.phone,
         avatar: profile.avatar,
+        created_at: profile.created_at,
       };
       setUser(mappedUser);
       localStorage.setItem("urbanz_user", JSON.stringify(mappedUser));
