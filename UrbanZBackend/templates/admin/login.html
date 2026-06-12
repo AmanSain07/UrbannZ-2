@@ -1,295 +1,253 @@
-{% extends "admin/base_site.html" %}
 {% load i18n static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UrbanZ Admin Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block extrastyle %}
-{{ block.super }}
-<style>
-  body {
-    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    }
 
-  #header {
-    background: linear-gradient(90deg, #7c3aed, #a855f7) !important;
-    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-  }
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+      backdrop-filter: blur(20px);
+    }
 
-  #branding h1 a {
-    color: white !important;
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
 
-  .login-box {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-    margin-top: 60px;
-  }
+    .logo h1 {
+      font-size: 30px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #a855f7, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-  #content-main {
-    background: transparent;
-  }
+    .logo p {
+      color: rgba(255,255,255,0.45);
+      font-size: 14px;
+      margin-top: 6px;
+    }
 
-  .login #content {
-    background: transparent;
-    padding: 0;
-  }
+    .error-msg {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 10px;
+      color: #fca5a5;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
 
-  #login-form h1 {
-    color: white;
-    font-size: 28px;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 8px;
-  }
+    label {
+      display: block;
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
 
-  .login-subtitle {
-    color: rgba(255,255,255,0.5);
-    text-align: center;
-    font-size: 14px;
-    margin-bottom: 32px;
-  }
+    .field {
+      margin-bottom: 20px;
+    }
 
-  .form-row {
-    margin-bottom: 20px;
-  }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.25s;
+    }
 
-  .form-row label {
-    color: rgba(255,255,255,0.8) !important;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 8px;
-  }
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      border-color: #a855f7;
+      background: rgba(168,85,247,0.1);
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.2);
+    }
 
-  .form-row input[type="text"],
-  .form-row input[type="email"],
-  .form-row input[type="password"] {
-    width: 100%;
-    padding: 14px 16px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-    color: white;
-    font-size: 15px;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-    outline: none;
-  }
+    input::placeholder { color: rgba(255,255,255,0.25); }
 
-  .form-row input:focus {
-    border-color: #a855f7;
-    background: rgba(168, 85, 247, 0.1);
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
-  }
+    .pw-wrap {
+      position: relative;
+    }
 
-  .password-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
+    .pw-wrap input {
+      padding-right: 48px;
+    }
 
-  .password-wrapper input {
-    padding-right: 50px !important;
-  }
+    .eye-btn {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: rgba(255,255,255,0.4);
+      padding: 4px;
+      line-height: 0;
+      transition: color 0.2s;
+    }
 
-  .eye-btn {
-    position: absolute;
-    right: 14px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.5);
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-    z-index: 10;
-  }
+    .eye-btn:hover { color: #a855f7; }
 
-  .eye-btn:hover {
-    color: #a855f7;
-  }
+    .eye-btn svg { width: 20px; height: 20px; display: block; }
 
-  .eye-btn svg {
-    width: 20px;
-    height: 20px;
-  }
+    .btn-submit {
+      width: 100%;
+      padding: 15px;
+      margin-top: 28px;
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+    }
 
-  .submit-row {
-    margin-top: 28px;
-  }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(124,58,237,0.6);
+    }
 
-  input[type="submit"] {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
-    border: none;
-    border-radius: 12px;
-    color: white;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-  }
+    .hint {
+      margin-top: 24px;
+      background: rgba(124,58,237,0.1);
+      border: 1px solid rgba(124,58,237,0.25);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+    }
 
-  input[type="submit"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.6);
-    background: linear-gradient(135deg, #6d28d9, #9333ea);
-  }
+    .hint p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      margin: 3px 0;
+    }
 
-  .errornote {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    border-radius: 10px;
-    color: #fca5a5;
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    font-size: 14px;
-  }
+    .hint code {
+      background: rgba(124,58,237,0.25);
+      color: #c4b5fd;
+      padding: 1px 7px;
+      border-radius: 5px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <h1>🛍️ UrbanZ</h1>
+      <p>Admin Dashboard — Sign in to continue</p>
+    </div>
 
-  .credentials-hint {
-    background: rgba(124, 58, 237, 0.1);
-    border: 1px solid rgba(124, 58, 237, 0.3);
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin-top: 20px;
-    text-align: center;
-  }
-
-  .credentials-hint p {
-    color: rgba(255,255,255,0.6);
-    font-size: 13px;
-    margin: 2px 0;
-  }
-
-  .credentials-hint code {
-    color: #c4b5fd;
-    font-weight: 600;
-    background: rgba(124, 58, 237, 0.2);
-    padding: 1px 6px;
-    border-radius: 4px;
-  }
-
-  /* Hide the default Django content-main bg */
-  #container {
-    background: transparent;
-  }
-
-  .login #container {
-    background: transparent;
-  }
-
-  #footer {
-    background: transparent;
-    color: rgba(255,255,255,0.3);
-    border-top: 1px solid rgba(255,255,255,0.05);
-  }
-</style>
-{% endblock %}
-
-{% block content_title %}{% endblock %}
-
-{% block breadcrumbs %}{% endblock %}
-
-{% block content %}
-<div class="login-box">
-  <h1>🛍️ UrbanZ Admin</h1>
-  <p class="login-subtitle">Sign in to manage your marketplace</p>
-
-  {% if form.errors %}
-  <p class="errornote">
-    ⚠️ Invalid email or password. Please try again.
-  </p>
-  {% endif %}
-
-  {% if next %}
-    {% if user.is_authenticated %}
-    <p class="errornote">{% trans "Your account doesn't have access to this page." %}</p>
+    {% if form.errors %}
+    <div class="error-msg">
+      ⚠️ Invalid email or password. Please try again.
+    </div>
     {% endif %}
-  {% endif %}
 
-  <form action="{{ action }}" method="post" id="login-form">
-    {% csrf_token %}
-    <input type="hidden" name="next" value="{{ next }}" />
+    <form method="post" action="{{ request.path }}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}" />
 
-    <div class="form-row">
-      <label for="id_username">📧 Email Address</label>
-      <input
-        type="text"
-        id="id_username"
-        name="username"
-        autofocus
-        autocomplete="username"
-        placeholder="admin@urbanz.com"
-        value="{{ form.username.value|default:'' }}"
-      />
-    </div>
-
-    <div class="form-row">
-      <label for="id_password">🔒 Password</label>
-      <div class="password-wrapper">
+      <div class="field">
+        <label for="id_username">Email Address</label>
         <input
-          type="password"
-          id="id_password"
-          name="password"
-          autocomplete="current-password"
-          placeholder="Enter your password"
+          type="email"
+          id="id_username"
+          name="username"
+          placeholder="admin@urbanz.com"
+          autofocus
+          autocomplete="username"
+          value="{{ form.username.value|default:'' }}"
         />
-        <button type="button" class="eye-btn" onclick="togglePassword()" id="eye-toggle" title="Show/Hide password">
-          <!-- Eye icon (show) -->
-          <svg id="eye-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          <!-- Eye-off icon (hide) -->
-          <svg id="eye-hide" style="display:none;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-          </svg>
-        </button>
       </div>
-    </div>
 
-    <div class="submit-row">
-      <input type="submit" value="Sign In →" />
-    </div>
+      <div class="field">
+        <label for="id_password">Password</label>
+        <div class="pw-wrap">
+          <input
+            type="password"
+            id="id_password"
+            name="password"
+            placeholder="Enter password"
+            autocomplete="current-password"
+          />
+          <button type="button" class="eye-btn" onclick="togglePw()" title="Toggle password">
+            <svg id="icon-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            <svg id="icon-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+            </svg>
+          </button>
+        </div>
+      </div>
 
-    <div class="credentials-hint">
-      <p>🔑 Email: <code>admin@urbanz.com</code></p>
-      <p>🔑 Password: <code>admin@123</code></p>
-    </div>
-  </form>
-</div>
+      <button type="submit" class="btn-submit">Sign In →</button>
 
-<script>
-function togglePassword() {
-  const input = document.getElementById('id_password');
-  const eyeShow = document.getElementById('eye-show');
-  const eyeHide = document.getElementById('eye-hide');
+      <div class="hint">
+        <p>📧 <code>admin@urbanz.com</code></p>
+        <p>🔑 <code>admin@123</code></p>
+      </div>
+    </form>
+  </div>
 
-  if (input.type === 'password') {
-    input.type = 'text';
-    eyeShow.style.display = 'none';
-    eyeHide.style.display = 'block';
-  } else {
-    input.type = 'password';
-    eyeShow.style.display = 'block';
-    eyeHide.style.display = 'none';
-  }
-}
-</script>
-{% endblock %}
+  <script>
+    function togglePw() {
+      var inp = document.getElementById('id_password');
+      var show = document.getElementById('icon-show');
+      var hide = document.getElementById('icon-hide');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        show.style.display = 'none';
+        hide.style.display = 'block';
+      } else {
+        inp.type = 'password';
+        show.style.display = 'block';
+        hide.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

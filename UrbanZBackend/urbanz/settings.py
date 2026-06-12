@@ -19,6 +19,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-insecure-key")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
 
+# Trust Railway's HTTPS reverse proxy — critical to avoid CSRF 403 errors
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
 # ---------------------------------------------------------------------------
 # Application definition
 # ---------------------------------------------------------------------------
