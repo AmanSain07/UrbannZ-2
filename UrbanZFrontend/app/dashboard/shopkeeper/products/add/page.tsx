@@ -128,9 +128,10 @@ export default function AddProductPage() {
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-bold ml-1">Category</label>
+              <label className="text-sm font-bold ml-1">Category *</label>
               {categories.length > 0 ? (
                 <select
+                  required
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none transition-all appearance-none cursor-pointer"
@@ -142,6 +143,7 @@ export default function AddProductPage() {
                 </select>
               ) : (
                 <input
+                  required
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   placeholder="e.g. clothing"
