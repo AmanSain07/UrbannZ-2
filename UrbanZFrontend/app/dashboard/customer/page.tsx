@@ -42,6 +42,8 @@ export default function CustomerDashboard() {
     if (isLoading) return;
     if (!user) {
       router.push("/login");
+    } else if (user.role !== "customer") {
+      router.push("/dashboard"); // Will redirect to their correct dashboard
     } else {
       setProfileForm({ name: user.name || "", phone: user.phone || "" });
     }

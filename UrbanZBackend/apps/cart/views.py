@@ -9,9 +9,10 @@ DELETE /api/cart/clear/     — Empty cart
 """
 
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.accounts.permissions import IsCustomer
 
 from apps.products.models import Product
 from .models import Cart, CartItem
@@ -35,7 +36,7 @@ def cart_with_prefetch(user):
 
 class CartView(APIView):
     """GET /api/cart/ — Return full cart with nested products."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomer]
 
     def get(self, request):
         cart = cart_with_prefetch(request.user)
@@ -44,7 +45,7 @@ class CartView(APIView):
 
 class AddToCartView(APIView):
     """POST /api/cart/items/ — Add a product to the cart."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomer]
 
     def post(self, request):
         serializer = AddToCartSerializer(data=request.data)
@@ -85,7 +86,7 @@ class CartItemUpdateView(APIView):
     PUT    /api/cart/items/{id}/ — Update quantity of a cart item.
     DELETE /api/cart/items/{id}/ — Remove a cart item.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomer]
 
     def put(self, request, pk):
         try:
@@ -117,7 +118,7 @@ class CartItemUpdateView(APIView):
 
 class ClearCartView(APIView):
     """DELETE /api/cart/clear/ — Remove all items from the cart."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomer]
 
     def delete(self, request):
         cart = get_or_create_cart(request.user)

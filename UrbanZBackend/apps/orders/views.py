@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.permissions import IsAdmin, IsVendorOrAdmin
+from apps.accounts.permissions import IsAdmin, IsVendorOrAdmin, IsCustomer
 from apps.cart.models import Cart
 from apps.notifications.utils import create_notification
 from .models import Address, Order, OrderItem
@@ -13,7 +13,7 @@ from .serializers import AddressSerializer, OrderSerializer, PlaceOrderSerialize
 class AddressListCreateView(generics.ListCreateAPIView):
     """GET/POST /api/orders/addresses/"""
     serializer_class = AddressSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomer]
 
     def get_queryset(self):
         return Address.objects.filter(user=self.request.user)
@@ -24,7 +24,7 @@ class AddressListCreateView(generics.ListCreateAPIView):
 
 class PlaceOrderView(APIView):
     """POST /api/orders/ — Customer places order from cart."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomer]
 
     def post(self, request):
         serializer = PlaceOrderSerializer(data=request.data)
@@ -93,7 +93,7 @@ class PlaceOrderView(APIView):
 class CustomerOrderListView(generics.ListAPIView):
     """GET /api/orders/ — Customer's order history."""
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomer]
     filterset_fields = ["status"]
 
     def get_queryset(self):

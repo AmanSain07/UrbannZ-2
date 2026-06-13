@@ -1,7 +1,8 @@
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.accounts.permissions import IsCustomer
 
 from apps.products.models import Product
 from .models import Wishlist
@@ -9,7 +10,7 @@ from .serializers import WishlistSerializer
 
 
 class WishlistView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomer]
 
     def get(self, request):
         items = Wishlist.objects.filter(user=request.user).select_related("product")
