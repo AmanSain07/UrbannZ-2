@@ -256,6 +256,13 @@ export async function deleteProductImageAPI(productId: string | number, imageId:
   return apiFetch(`/api/products/${productId}/images/${imageId}/`, { method: "DELETE" });
 }
 
+export async function reorderProductImagesAPI(productId: string | number, imageIds: (number | string)[]) {
+  return apiFetch(`/api/products/${productId}/images/reorder/`, {
+    method: "POST",
+    body: JSON.stringify({ image_ids: imageIds }),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Category APIs
 // ---------------------------------------------------------------------------

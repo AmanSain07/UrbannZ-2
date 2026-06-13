@@ -192,6 +192,35 @@ class ProductImageDeleteView(APIView):
         img.delete()
         return Response({"message": "Image deleted."}, status=status.HTTP_204_NO_CONTENT)
 
+
+class ProductImageReorderView(APIView):
+    """POST /api/products/{pk}/images/reorder/ — Reorder images."""
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def post(self, request, pk):
+        try:
+            product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        self.check_object_permissions(request, product)
+
+        image_ids = request.data.get("image_ids", [])
+        if not isinstance(image_ids, list):
+            return Response({"detail": "image_ids must be a list."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Bulk update the order
+        images = list(ProductImage.objects.filter(product=product, id__in=image_ids))
+        img_dict = {img.id: img for img in images}
+
+        for i, img_id in enumerate(image_ids):
+            if img_id in img_dict:
+                img_dict[img_id].order = i
+        
+        ProductImage.objects.bulk_update(images, ["order"])
+
+        return Response({"message": "Images reordered."})
+
 # ---------------------------------------------------------------------------
 # Admin Product Views
 # ---------------------------------------------------------------------------

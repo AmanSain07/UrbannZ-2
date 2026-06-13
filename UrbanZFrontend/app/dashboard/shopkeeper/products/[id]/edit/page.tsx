@@ -4,13 +4,14 @@ import { useAuth } from "@/lib/auth-context";
 import { useStore } from "@/lib/store-context";
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, X, UploadCloud, Trash2, CheckCircle } from "lucide-react";
+import { ArrowLeft, Loader2, X, UploadCloud, Trash2, CheckCircle, Image as ImageIcon, GripVertical, Star } from "lucide-react";
 import Link from "next/link";
 import {
   fetchProductById,
   updateProductAPI,
   uploadProductImage,
   deleteProductImageAPI,
+  reorderProductImagesAPI,
 } from "@/lib/api";
 
 type UploadedImage = { id: number; src: string; order: number };
@@ -29,6 +30,7 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
   const [saved, setSaved] = useState(false);
 
   const [images, setImages] = useState<UploadedImage[]>([]);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -125,6 +127,50 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
       setImages((prev) => prev.filter((img) => img.id !== imageId));
     } catch (err: any) {
       setError(err?.message || "Failed to delete image.");
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, idx: number) => {
+    setDraggedIdx(idx);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIdx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === dropIdx) return;
+
+    const newImages = [...images];
+    const draggedItem = newImages[draggedIdx];
+    newImages.splice(draggedIdx, 1);
+    newImages.splice(dropIdx, 0, draggedItem);
+    
+    setImages(newImages);
+    setDraggedIdx(null);
+
+    try {
+      await reorderProductImagesAPI(params.id, newImages.map(img => img.id));
+    } catch (err: any) {
+      setError(err?.message || "Failed to save image order.");
+    }
+  };
+
+  const handleMakeCover = async (idx: number) => {
+    if (idx === 0) return;
+    const newImages = [...images];
+    const item = newImages[idx];
+    newImages.splice(idx, 1);
+    newImages.unshift(item);
+    setImages(newImages);
+
+    try {
+      await reorderProductImagesAPI(params.id, newImages.map(img => img.id));
+    } catch (err: any) {
+      setError(err?.message || "Failed to save cover image.");
     }
   };
 
@@ -276,17 +322,52 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
 
           {/* Current images */}
           {images.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              {images.map((img) => (
-                <div key={img.id} className="relative group rounded-xl overflow-hidden aspect-square bg-secondary/10">
-                  <img src={img.src} alt="Product" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteImage(img.id)}
-                    className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              {images.map((img, idx) => (
+                <div
+                  key={img.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  className={`relative group rounded-xl overflow-hidden aspect-square bg-secondary/10 border-2 cursor-grab active:cursor-grabbing transition-all ${
+                    draggedIdx === idx ? "opacity-50" : "opacity-100"
+                  } ${idx === 0 ? "border-primary" : "border-border/50"}`}
+                >
+                  <img src={img.src} alt="Product" className="w-full h-full object-cover pointer-events-none" />
+                  
+                  {idx === 0 && (
+                    <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">
+                      COVER
+                    </div>
+                  )}
+
+                  {/* Drag Handle Indicator */}
+                  <div className="absolute bottom-2 left-2 p-1.5 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GripVertical size={14} />
+                  </div>
+
+                  {/* Actions Container */}
+                  <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(img.id)}
+                      className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm"
+                      title="Delete Image"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                    {idx !== 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleMakeCover(idx)}
+                        className="p-1.5 bg-black/70 hover:bg-black text-white rounded-full shadow-sm"
+                        title="Set as Cover"
+                      >
+                        <Star size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

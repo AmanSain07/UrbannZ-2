@@ -11,6 +11,7 @@ from .views import (
     AdminProductListView,
     AdminApproveProductView,
     AdminRejectProductView,
+    ProductImageReorderView,
 )
 
 urlpatterns = [
@@ -24,6 +25,7 @@ urlpatterns = [
     path("<int:pk>/manage/", VendorProductUpdateView.as_view(), name="product-manage"),
     path("<int:pk>/stock/", ToggleStockView.as_view(), name="product-stock-toggle"),
     path("<int:pk>/images/", ProductImageUploadView.as_view(), name="product-image-upload"),
+    path("<int:pk>/images/reorder/", ProductImageReorderView.as_view(), name="product-image-reorder"),
     path("<int:pk>/images/<int:img_id>/", ProductImageDeleteView.as_view(), name="product-image-delete"),
 
     # Admin

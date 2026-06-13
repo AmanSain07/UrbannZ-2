@@ -16,8 +16,8 @@ export default function AddProductPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [imageType, setImageType] = useState<"url" | "upload">("upload");
 
   const [formData, setFormData] = useState({
@@ -30,14 +30,17 @@ export default function AddProductPage() {
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFilePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...files]);
+      
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFilePreviews((prev) => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -66,9 +69,11 @@ export default function AddProductPage() {
       const res = await createProduct(payload);
       const newProduct = res.product || res;
 
-      // 2. If upload type and selected file, upload it
-      if (imageType === "upload" && selectedFile && newProduct?.id) {
-        await uploadProductImage(newProduct.id, selectedFile);
+      // 2. If upload type and selected files, upload them
+      if (imageType === "upload" && selectedFiles.length > 0 && newProduct?.id) {
+        for (const file of selectedFiles) {
+          await uploadProductImage(newProduct.id, file);
+        }
       }
 
       await refreshProducts();
@@ -205,12 +210,31 @@ export default function AddProductPage() {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 onChange={handleFileChange}
               />
-              {filePreview && (
-                <div className="relative h-48 w-full rounded-xl overflow-hidden bg-secondary/10 border border-border/50">
-                  <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+              {filePreviews.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {filePreviews.map((preview, idx) => (
+                    <div key={idx} className="relative h-24 w-full rounded-xl overflow-hidden bg-secondary/10 border border-border/50">
+                      <img src={preview} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newFiles = [...selectedFiles];
+                          const newPreviews = [...filePreviews];
+                          newFiles.splice(idx, 1);
+                          newPreviews.splice(idx, 1);
+                          setSelectedFiles(newFiles);
+                          setFilePreviews(newPreviews);
+                        }}
+                        className="absolute top-1 right-1 p-1 bg-black/60 hover:bg-red-500 text-white rounded-full text-[10px]"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
