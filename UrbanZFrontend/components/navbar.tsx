@@ -173,6 +173,12 @@ export default function Navbar() {
                 <Link href="/help" className="text-foreground" onClick={() => setIsOpen(false)}>Help</Link>
               </>
             )}
+            {!user ? (
+              <>
+                <Link href="/login" className="text-foreground font-bold" onClick={() => setIsOpen(false)}>Login</Link>
+                <Link href="/signup" className="text-foreground font-bold" onClick={() => setIsOpen(false)}>Sign up</Link>
+              </>
+            ) : (
               <>
                 <Link href="/profile" className="text-foreground font-bold" onClick={() => setIsOpen(false)}>My Profile</Link>
                 <Link href={
