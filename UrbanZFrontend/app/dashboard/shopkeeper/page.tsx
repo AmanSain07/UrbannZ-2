@@ -23,6 +23,15 @@ export default function ShopkeeperDashboard() {
   const totalSales = myOrders.reduce((sum, o) => sum + o.total, 0);
   const pendingOrders = myOrders.filter(o => o.status === "Pending").length;
   const totalProducts = myProducts.length;
+  
+  // Commission calculation (assume 10% platform fee)
+  const platformCommissionRate = 0.10;
+  const totalCommission = totalSales * platformCommissionRate;
+  const sellerRevenue = totalSales - totalCommission;
+
+  // Mock settlement data
+  const pendingPayout = sellerRevenue * 0.4;
+  const paidPayout = sellerRevenue * 0.6;
 
   return (
     <div className="space-y-8">
@@ -41,10 +50,10 @@ export default function ShopkeeperDashboard() {
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Sales", val: formatPrice(totalSales), icon: DollarSign, color: "text-green-600" },
+          { label: "Total Revenue", val: formatPrice(totalSales), icon: DollarSign, color: "text-green-600" },
           { label: "Pending Orders", val: pendingOrders.toString(), icon: Package, color: "text-orange-600" },
-          { label: "Products", val: totalProducts.toString(), icon: ShoppingBag, color: "text-blue-600" },
-          { label: "Rating", val: "4.8", icon: Star, color: "text-amber-500" },
+          { label: "Total Products", val: totalProducts.toString(), icon: ShoppingBag, color: "text-blue-600" },
+          { label: "UrbanZ Commission", val: formatPrice(totalCommission), icon: DollarSign, color: "text-red-500" },
         ].map((stat, i) => (
           <div key={i} className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm flex flex-col gap-2">
             <div className="flex items-center justify-between">
@@ -54,6 +63,24 @@ export default function ShopkeeperDashboard() {
             <span className="text-2xl font-black">{stat.val}</span>
           </div>
         ))}
+      </div>
+
+      {/* Settlements Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm">
+          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Net Earnings</h3>
+          <p className="text-3xl font-black text-green-600">{formatPrice(sellerRevenue)}</p>
+        </div>
+        <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm">
+          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Pending Payout</h3>
+          <p className="text-3xl font-black text-orange-500">{formatPrice(pendingPayout)}</p>
+          <span className="text-xs text-muted-foreground">Next cycle: 1st of Month</span>
+        </div>
+        <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm">
+          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Paid Payouts</h3>
+          <p className="text-3xl font-black text-primary">{formatPrice(paidPayout)}</p>
+          <span className="text-xs text-green-500 font-bold">All clear ✅</span>
+        </div>
       </div>
 
       {/* Recent Activity / Chart Placeholder */}

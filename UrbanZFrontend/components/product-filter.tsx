@@ -50,7 +50,7 @@ const FILTERS = {
   // season: ["Summer", "Winter", "Monsoon", "Festive"],
   occasion: ["Daily", "Casual", "Party", "Office", "Gym", "Wedding"],
   style: ["Street Style", "Vintage", "Minimal", "Luxury"],
-  // size: ["XS", "S", "M", "L", "XL", "XXL"], 
+  size: ["XS", "S", "M", "L", "XL", "XXL"], 
   price: ["Under ₹499", "₹500 - ₹999", "₹1000 - ₹1999", "Premium"],
 };
 
@@ -62,6 +62,7 @@ export default function ProductFilter({ className }: { className?: string }) {
     gender: [],
     occasion: [],
     style: [],
+    size: [],
     price: [],
   });
 

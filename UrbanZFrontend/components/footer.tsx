@@ -30,13 +30,13 @@ export default function Footer() {
               Comfert bhi, Class bhi.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="p-2 rounded-full bg-secondary/10 hover:bg-primary hover:text-white transition-colors">
+              <a href="https://instagram.com/urbanz.in" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-secondary/10 hover:bg-primary hover:text-white transition-colors">
                 <Instagram size={18} />
               </a>
-              <a href="#" className="p-2 rounded-full bg-secondary/10 hover:bg-primary hover:text-white transition-colors">
+              <a href="https://x.com/urbanzin" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-secondary/10 hover:bg-primary hover:text-white transition-colors">
                 <Twitter size={18} />
               </a>
-              <a href="#" className="p-2 rounded-full bg-secondary/10 hover:bg-primary hover:text-white transition-colors">
+              <a href="https://youtube.com/@urbanz" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-secondary/10 hover:bg-primary hover:text-white transition-colors">
                 <Youtube size={18} />
               </a>
             </div>
@@ -80,17 +80,13 @@ export default function Footer() {
                 <Mail size={14} className="text-primary" />
                 <span>support@urbanz.in</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone size={14} className="text-primary" />
-                <span>+91 999 888 7777</span>
-              </div>
             </div>
           </div>
         </div>
 
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            © 2025 UrbanZ Retail Pvt Ltd. All rights reserved.
+            © 2026 UrbanZ Retail Pvt Ltd. All rights reserved.
           </p>
           <div className="flex items-center gap-2 grayscale opacity-50 relative h-6">
             <div className="relative w-10 h-4">

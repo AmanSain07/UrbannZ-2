@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo } from "react"; // Added useMemo
+import { useMemo, useState } from "react"; // Added useMemo, useState
 import Hero from "@/components/hero";
 // import CategoryGrid from "@/components/category-grid"; // Removed static import
 import Link from "next/link";
@@ -19,6 +19,20 @@ const CategoryGrid = dynamic(() => import("@/components/category-grid"), { // Ad
 
 export default function Home() {
   const { products } = useStore();
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    setError("");
+    setSubscribed(true);
+    setEmail("");
+  };
 
   // Memoize all product filters
   const { trendingProducts, newArrivals, vintageCollection, casualWear, bestSellers, under499 } = useMemo(() => {
@@ -185,16 +199,27 @@ export default function Home() {
               Sign up for exclusive access to limited editions and secret sales. No spam, just vibes.
             </p>
 
-            <form className="max-w-md mx-auto relative z-10 flex gap-2">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="flex-1 px-8 py-4 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white shadow-inner"
-              />
-              <button className="px-8 py-4 rounded-full bg-white text-primary font-bold hover:scale-105 transition-transform shadow-lg hover:shadow-xl">
-                Join
-              </button>
-            </form>
+            {subscribed ? (
+              <div className="max-w-md mx-auto relative z-10 bg-white/20 backdrop-blur-xl border border-white/30 p-4 rounded-2xl text-white font-bold">
+                You're in! Exclusive drops coming your way 🔥
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="max-w-md mx-auto relative z-10 flex flex-col gap-2">
+                <div className="flex gap-2 w-full">
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1 px-8 py-4 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white shadow-inner"
+                  />
+                  <button type="submit" className="px-8 py-4 rounded-full bg-white text-primary font-bold hover:scale-105 transition-transform shadow-lg hover:shadow-xl">
+                    Join
+                  </button>
+                </div>
+                {error && <p className="text-red-200 text-sm mt-1">{error}</p>}
+              </form>
+            )}
           </div>
         </div>
       </section>

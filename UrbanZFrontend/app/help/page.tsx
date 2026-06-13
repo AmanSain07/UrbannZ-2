@@ -14,26 +14,26 @@ export default function HelpPage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mb-16">
-        <div className="p-6 rounded-2xl bg-secondary/20 flex flex-col items-center text-center">
+        <div className="p-6 rounded-2xl bg-secondary/20 flex flex-col items-center text-center cursor-pointer hover:bg-secondary/30 transition-colors" onClick={() => window.location.href='/dashboard/customer'}>
           <div className="p-3 bg-background rounded-full mb-4">
             <Truck className="h-6 w-6 text-primary" />
           </div>
           <h3 className="font-bold mb-2">Track Order</h3>
-          <p className="text-sm text-muted-foreground">See where your fit is at.</p>
+          <p className="text-sm text-muted-foreground">Go to your dashboard to track.</p>
         </div>
-        <div className="p-6 rounded-2xl bg-secondary/20 flex flex-col items-center text-center">
+        <div className="p-6 rounded-2xl bg-secondary/20 flex flex-col items-center text-center cursor-pointer hover:bg-secondary/30 transition-colors" onClick={() => window.open('https://wa.me/919998887777', '_blank')}>
           <div className="p-3 bg-background rounded-full mb-4">
-            <MessageCircle className="h-6 w-6 text-primary" />
+            <MessageCircle className="h-6 w-6 text-green-500" />
           </div>
-          <h3 className="font-bold mb-2">Chat Support</h3>
-          <p className="text-sm text-muted-foreground">Talk to a real human.</p>
+          <h3 className="font-bold mb-2">WhatsApp Support</h3>
+          <p className="text-sm text-muted-foreground">Talk to a real human instantly.</p>
         </div>
-        <div className="p-6 rounded-2xl bg-secondary/20 flex flex-col items-center text-center">
+        <div className="p-6 rounded-2xl bg-secondary/20 flex flex-col items-center text-center cursor-pointer hover:bg-secondary/30 transition-colors" onClick={() => window.location.href='mailto:support@urbanz.in'}>
           <div className="p-3 bg-background rounded-full mb-4">
             <Mail className="h-6 w-6 text-primary" />
           </div>
           <h3 className="font-bold mb-2">Email Us</h3>
-          <p className="text-sm text-muted-foreground">help@urbanz.com</p>
+          <p className="text-sm text-muted-foreground">support@urbanz.in</p>
         </div>
       </div>
 

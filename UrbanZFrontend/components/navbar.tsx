@@ -20,6 +20,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { items } = useCart();
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -91,6 +92,13 @@ export default function Navbar() {
             <input
               type="search"
               placeholder="Search fits... Yahin Mil Jayega"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+                }
+              }}
               className="h-9 w-64 rounded-full border border-input bg-secondary/20 px-9 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/70"
             />
           </div>
@@ -108,8 +116,9 @@ export default function Navbar() {
 
           <MagneticButton>
             <Link href="/cart">
-              <button className="relative rounded-full size-9 flex items-center justify-center hover:bg-secondary/20 transition-colors">
+              <button className="relative rounded-full h-9 px-4 flex items-center justify-center gap-2 hover:bg-secondary/20 transition-colors">
                 <ShoppingBag className="h-5 w-5" />
+                <span className="hidden md:inline text-sm font-medium">Cart</span>
 
                 {isMounted && items.length > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
@@ -125,8 +134,9 @@ export default function Navbar() {
             {!user ? (
               <MagneticButton>
                 <Link href="/login">
-                  <button className="rounded-full size-9 flex items-center justify-center hover:bg-secondary/20 transition-colors relative">
+                  <button className="rounded-full h-9 px-4 flex items-center justify-center gap-2 hover:bg-secondary/20 transition-colors relative">
                     <User className="h-5 w-5" />
+                    <span className="hidden md:inline text-sm font-medium">Login</span>
                   </button>
                 </Link>
               </MagneticButton>

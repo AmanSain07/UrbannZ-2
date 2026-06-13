@@ -9,14 +9,23 @@ import { useRouter } from "next/navigation";
 
 export default function CustomPage() {
   const { user } = useAuth();
-  const { addCustomDesign } = useStore(); // Use store
+  const { addCustomDesign } = useStore();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     notes: "",
-    designUrl: "https://example.com/mock-design.png", // Mocked for now
-    type: "embroidery" as "embroidery" | "pod" // Default
+    designUrl: "https://example.com/mock-design.png",
+    type: "print" as "print" | "embroidery",
+    tshirtType: "oversized",
+    color: "black",
+    size: "L",
+    placement: "front",
+    quantity: 1
   });
+
+  const pricePerPiece = formData.type === "print" ? 499 : 799;
+  const total = pricePerPiece * formData.quantity;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,18 +37,19 @@ export default function CustomPage() {
 
     setIsSubmitting(true);
     try {
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       addCustomDesign({
         userId: user.id,
         designUrl: formData.designUrl,
-        notes: formData.notes,
-        type: formData.type
+        notes: `Type: ${formData.tshirtType}, Color: ${formData.color}, Size: ${formData.size}, Placement: ${formData.placement}, Qty: ${formData.quantity}. ${formData.notes}`,
+        type: formData.type === "embroidery" ? "embroidery" : "pod"
       });
 
-      alert("Design submitted! Check your dashboard for updates.");
-      router.push("/dashboard");
+      setSuccess(true);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 3000);
     } catch (error) {
       console.error(error);
       alert("Failed to submit design.");
@@ -47,6 +57,17 @@ export default function CustomPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="container px-4 md:px-6 py-20 min-h-screen flex items-center justify-center">
+        <div className="text-center bg-card p-12 rounded-3xl shadow-xl border border-border">
+          <h2 className="text-3xl font-black mb-4 text-primary">Order submitted! We'll confirm within 24 hours ✅</h2>
+          <p className="text-muted-foreground">Redirecting to your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container px-4 md:px-6 py-20 min-h-screen">
@@ -62,11 +83,24 @@ export default function CustomPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-card border border-border rounded-3xl p-8 md:p-12 shadow-2xl">
-
-          {/* Customization Type Selection */}
+          
           <div className="mb-8">
-            <label className="block font-bold mb-4 text-lg">1. Choose Your Style</label>
+            <label className="block font-bold mb-4 text-lg">1. Choose Customization</label>
             <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: "print" })}
+                className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${formData.type === "print" ? "border-primary bg-primary/5 shadow-md" : "border-border hover:border-primary/50"}`}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${formData.type === "print" ? "bg-primary text-white" : "bg-secondary text-muted-foreground"}`}>
+                  <Printer size={24} />
+                </div>
+                <div className="text-center">
+                  <h3 className="font-bold">Print</h3>
+                  <p className="text-xs text-muted-foreground">₹499 per piece</p>
+                </div>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, type: "embroidery" })}
@@ -77,37 +111,87 @@ export default function CustomPage() {
                 </div>
                 <div className="text-center">
                   <h3 className="font-bold">Embroidery</h3>
-                  <p className="text-xs text-muted-foreground">Premium thread work</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, type: "pod" })}
-                className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${formData.type === "pod" ? "border-primary bg-primary/5 shadow-md" : "border-border hover:border-primary/50"}`}
-              >
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${formData.type === "pod" ? "bg-primary text-white" : "bg-secondary text-muted-foreground"}`}>
-                  <Printer size={24} />
-                </div>
-                <div className="text-center">
-                  <h3 className="font-bold">Print on Demand</h3>
-                  <p className="text-xs text-muted-foreground">High quality prints</p>
+                  <p className="text-xs text-muted-foreground">₹799 per piece</p>
                 </div>
               </button>
             </div>
           </div>
 
-          {/* Upload Area */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div>
+              <label className="block font-bold mb-2 text-sm">T-shirt Type</label>
+              <select 
+                value={formData.tshirtType} 
+                onChange={(e) => setFormData({ ...formData, tshirtType: e.target.value })}
+                className="w-full p-3 rounded-xl border border-input bg-background"
+              >
+                <option value="oversized">Oversized</option>
+                <option value="regular">Regular Fit</option>
+                <option value="hoodie">Hoodie</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-bold mb-2 text-sm">Color</label>
+              <select 
+                value={formData.color} 
+                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                className="w-full p-3 rounded-xl border border-input bg-background"
+              >
+                <option value="black">Black</option>
+                <option value="white">White</option>
+                <option value="grey">Grey</option>
+                <option value="navy">Navy Blue</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-bold mb-2 text-sm">Size</label>
+              <select 
+                value={formData.size} 
+                onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                className="w-full p-3 rounded-xl border border-input bg-background"
+              >
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+                <option value="XXL">XXL</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-bold mb-2 text-sm">Quantity</label>
+              <input 
+                type="number" 
+                min="1" 
+                value={formData.quantity} 
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                className="w-full p-3 rounded-xl border border-input bg-background"
+              />
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <label className="block font-bold mb-2 text-sm">Placement</label>
+            <select 
+              value={formData.placement} 
+              onChange={(e) => setFormData({ ...formData, placement: e.target.value })}
+              className="w-full p-3 rounded-xl border border-input bg-background"
+            >
+              <option value="front">Front Center</option>
+              <option value="back">Back Center</option>
+              <option value="left-chest">Left Chest</option>
+              <option value="right-chest">Right Chest</option>
+            </select>
+          </div>
+
           <div className="mb-8">
             <label className="block font-bold mb-4 text-lg">2. Upload Design</label>
             <div className="border-2 border-dashed border-border rounded-2xl h-64 flex flex-col items-center justify-center bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer group">
               <Upload className="w-12 h-12 text-muted-foreground group-hover:text-primary mb-4 transition-colors" />
               <p className="font-bold text-muted-foreground">Click to upload or drag & drop</p>
-              <p className="text-xs text-muted-foreground mt-2">(PNG, JPG, AI - Max 10MB)</p>
+              <p className="text-xs text-muted-foreground mt-2">(PNG, JPG - Max 10MB)</p>
             </div>
           </div>
 
-          {/* Notes */}
           <div className="mb-8">
             <label className="block font-bold mb-4 text-lg">3. Notes for Shopkeeper</label>
             <textarea
@@ -117,6 +201,11 @@ export default function CustomPage() {
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               required
             />
+          </div>
+
+          <div className="bg-secondary/10 p-6 rounded-2xl mb-8 flex justify-between items-center">
+            <span className="font-bold text-lg">Estimated Total:</span>
+            <span className="text-3xl font-black">₹{total}</span>
           </div>
 
           <button

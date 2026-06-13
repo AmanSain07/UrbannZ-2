@@ -20,6 +20,7 @@ function ShopContent() {
   const price = searchParams.get('price');
   const sortParam = searchParams.get('sort');
   const tag = searchParams.get('tag');
+  const search = searchParams.get('search');
 
   useEffect(() => {
     // Simulate network delay for realism
@@ -27,6 +28,15 @@ function ShopContent() {
 
     // Filter for approved items first
     let result = allProducts.filter(p => p.status === 'approved');
+
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q) ||
+        p.tags?.some(t => t.toLowerCase().includes(q))
+      );
+    }
 
     // 1. Filter by Category — backend returns category_name on products
     if (category) {
@@ -56,9 +66,9 @@ function ShopContent() {
       });
     }
 
-    // 4. Extended Filters (Gender, Occasion, Style)
+    // 4. Extended Filters (Gender, Occasion, Style, Size)
     // Note: We check if the property exists or if tags contain the value for flexibility
-    const extraFilters = ['gender', 'occasion', 'style'];
+    const extraFilters = ['gender', 'occasion', 'style', 'size'];
     extraFilters.forEach(key => {
       const paramVal = searchParams.get(key);
       if (paramVal) {
@@ -91,7 +101,7 @@ function ShopContent() {
 
     setFilteredProducts(result);
     setLoading(false);
-  }, [category, price, sortParam, tag, allProducts, searchParams]);
+  }, [category, price, sortParam, tag, search, allProducts, searchParams]);
 
   return (
     <div className="container px-4 md:px-6 py-10">
