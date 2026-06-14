@@ -1,104 +1,107 @@
 "use client";
 
-import { DollarSign, TrendingUp, CreditCard, Calendar, ArrowUpRight, Download } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchVendorEarnings, fetchVendorAnalytics } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
+import { DollarSign, Loader2, ArrowDownToLine, CheckCircle2, Clock } from "lucide-react";
 
 export default function EarningsPage() {
-  // Mock data for earnings
-  const stats = [
-    { label: "Total Revenue", value: 125000, change: "+12.5%", icon: DollarSign, color: "text-green-500", bg: "bg-green-500/10" },
-    { label: "Net Profit", value: 45000, change: "+8.2%", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Pending Payouts", value: 12500, change: "Processing", icon: CreditCard, color: "text-orange-500", bg: "bg-orange-500/10" },
-  ];
+  const [earnings, setEarnings] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const transactions = [
-    { id: "TXN-001", date: "2025-06-15", amount: 4500, status: "Completed", type: "Order #ORD-1024" },
-    { id: "TXN-002", date: "2025-06-14", amount: 2800, status: "Completed", type: "Order #ORD-1022" },
-    { id: "TXN-003", date: "2025-06-12", amount: 12500, status: "Processing", type: "Weekly Payout" },
-    { id: "TXN-004", date: "2025-06-10", amount: 3200, status: "Completed", type: "Order #ORD-1018" },
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [earningsData, analyticsData] = await Promise.all([
+          fetchVendorEarnings(),
+          fetchVendorAnalytics()
+        ]);
+        setEarnings(earningsData);
+        setAnalytics(analyticsData);
+      } catch (e) {
+        console.error("Failed to fetch earnings:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  if (loading) {
+    return <div className="flex justify-center p-20"><Loader2 className="animate-spin w-8 h-8 text-muted-foreground" /></div>;
+  }
 
   return (
-    <div className="space-y-8 mb-[100px]">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">Earnings & Payouts</h1>
-          <p className="text-muted-foreground">Track your revenue and manage withdrawals.</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-bold hover:bg-secondary/80 transition-colors">
-          <Download size={18} /> Export Report
-        </button>
+    <div className="space-y-8 pb-20">
+      <div>
+        <h1 className="text-3xl font-black tracking-tight">Earnings & Settlements</h1>
+        <p className="text-muted-foreground">Track your revenue, commissions, and payouts.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="p-6 bg-card border border-border/50 rounded-2xl shadow-sm">
-            <div className="flex items-start justify-between mb-4">
-              <div className={`p-3 rounded-xl ${stat.bg}`}>
-                <stat.icon size={24} className={stat.color} />
-              </div>
-              <span className={`text-xs font-bold px-2 py-1 rounded-full ${stat.change.includes('+') ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                {stat.change}
-              </span>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm col-span-1 md:col-span-2 bg-gradient-to-br from-green-500/10 to-emerald-500/5">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-sm font-bold text-green-700 uppercase tracking-wider mb-2">Total Lifetime Earnings</h3>
+              <p className="text-4xl font-black text-green-600">{formatPrice(analytics?.lifetime_revenue || 0)}</p>
             </div>
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
-            <h3 className="text-3xl font-black mt-1">{formatPrice(stat.value)}</h3>
+            <div className="p-3 bg-green-500/20 text-green-600 rounded-xl"><DollarSign size={24} /></div>
           </div>
-        ))}
-      </div>
-
-      {/* Chart Placeholder */}
-      <div className="p-6 bg-card border border-border/50 rounded-2xl shadow-sm">
-        <h3 className="font-bold text-lg mb-6">Revenue Analytics</h3>
-        <div className="h-64 flex items-end justify-between gap-2">
-          {[40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 50, 95].map((h, i) => (
-            <div key={i} className="w-full bg-primary/10 rounded-t-lg hover:bg-primary/20 transition-colors relative group">
-              <div
-                className="absolute bottom-0 left-0 right-0 bg-primary/80 rounded-t-lg transition-all duration-500"
-                style={{ height: `${h}%` }}
-              ></div>
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                {formatPrice(h * 1000)}
-              </div>
-            </div>
-          ))}
         </div>
-        <div className="flex justify-between mt-4 text-xs text-muted-foreground font-bold uppercase">
-          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
-          <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+        <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm">
+          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Monthly Earnings</h3>
+          <p className="text-2xl font-black text-foreground">{formatPrice(analytics?.monthly_revenue || 0)}</p>
+        </div>
+        <div className="bg-card p-6 rounded-2xl border border-orange-500/30 shadow-sm bg-orange-500/5">
+          <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-2 flex items-center gap-2"><Clock size={14}/> Pending Settlement</h3>
+          <p className="text-2xl font-black text-orange-500">{formatPrice(analytics?.pending_settlement || 0)}</p>
         </div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className="space-y-4">
-        <h3 className="font-bold text-xl">Recent Transactions</h3>
-        <div className="bg-card border border-border/50 rounded-2xl overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-secondary/20 border-b border-border/50 text-muted-foreground">
+      <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-border/50 flex justify-between items-center">
+          <h3 className="font-bold text-lg">Transaction History</h3>
+          <button className="text-sm font-bold text-primary flex items-center gap-2 hover:underline">
+            <ArrowDownToLine size={16} /> Export CSV
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-secondary/5 border-b border-border text-xs uppercase text-muted-foreground font-semibold">
               <tr>
-                <th className="p-4 font-bold">Transaction ID</th>
-                <th className="p-4 font-bold">Type</th>
-                <th className="p-4 font-bold">Date</th>
-                <th className="p-4 font-bold">Status</th>
-                <th className="p-4 font-bold text-right">Amount</th>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4">Order ID</th>
+                <th className="px-6 py-4">Product</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Order Amount</th>
+                <th className="px-6 py-4 text-right text-red-500">Commission (10%)</th>
+                <th className="px-6 py-4 text-right text-green-600">Your Earning</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
-              {transactions.map((txn) => (
-                <tr key={txn.id} className="hover:bg-secondary/5 transition-colors">
-                  <td className="p-4 font-mono font-medium">{txn.id}</td>
-                  <td className="p-4 font-medium">{txn.type}</td>
-                  <td className="p-4 text-muted-foreground">{txn.date}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${txn.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                      {txn.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right font-bold">{formatPrice(txn.amount)}</td>
+              {earnings.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-muted-foreground">No transactions yet.</td>
                 </tr>
-              ))}
+              ) : (
+                earnings.map((tx: any) => (
+                  <tr key={tx.id} className="hover:bg-secondary/5 transition-colors">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">{tx.date}</td>
+                    <td className="px-6 py-4 font-mono font-medium text-sm">#{tx.order_id}</td>
+                    <td className="px-6 py-4 text-sm font-medium">{tx.product_name}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase
+                        ${tx.status.toLowerCase() === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {tx.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right font-medium">{formatPrice(tx.amount)}</td>
+                    <td className="px-6 py-4 text-right text-red-500 font-medium">-{formatPrice(tx.commission)}</td>
+                    <td className="px-6 py-4 text-right text-green-600 font-black">{formatPrice(tx.vendor_earning)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

@@ -38,12 +38,14 @@ export default function ShopkeeperLayout({ children }: { children: React.ReactNo
 
 
   const NAV_ITEMS = [
-    { label: "Overview", href: "/dashboard/shopkeeper", icon: LayoutDashboard },
+    { label: "Dashboard", href: "/dashboard/shopkeeper", icon: LayoutDashboard },
     { label: "Products", href: "/dashboard/shopkeeper/products", icon: ShoppingBag },
     { label: "Orders", href: "/dashboard/shopkeeper/orders", icon: Package },
-    { label: "Custom Requests", href: "/dashboard/shopkeeper/custom-requests", icon: PenTool },
+    { label: "Inventory", href: "/dashboard/shopkeeper/inventory", icon: Package }, // Or use a different icon like Archive
     { label: "Earnings", href: "/dashboard/shopkeeper/earnings", icon: DollarSign },
-    { label: "Notifications", href: "/dashboard/shopkeeper/notifications", icon: Bell },
+    { label: "Store Management", href: "/dashboard/shopkeeper/store", icon: Store },
+    { label: "Custom Orders", href: "/dashboard/shopkeeper/custom-requests", icon: PenTool },
+    { label: "Profile", href: "/dashboard/shopkeeper/profile", icon: Settings }, // Will separate profile and settings if needed, but the user requested both.
     { label: "Settings", href: "/dashboard/shopkeeper/settings", icon: Settings },
   ];
 

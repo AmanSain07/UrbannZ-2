@@ -166,3 +166,116 @@ class AdminRejectVendorView(APIView):
                 "application": VendorApplicationSerializer(application).data,
             }
         )
+
+from django.db.models import Sum, Count, Q
+from django.utils import timezone
+from datetime import timedelta
+from apps.products.models import Product
+from apps.orders.models import OrderItem, Order
+from apps.stores.models import Store
+
+class VendorAnalyticsView(APIView):
+    """GET /api/vendors/analytics/"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        
+        products = Product.objects.filter(owner=user)
+        total_products = products.count()
+        active_products = products.filter(status="approved", in_stock=True).count()
+        out_of_stock_products = products.filter(Q(in_stock=False) | Q(stock_quantity=0)).count()
+
+        items = OrderItem.objects.filter(product__owner=user)
+        total_orders = items.values("order").distinct().count()
+        pending_orders = items.filter(order__status=Order.Status.PENDING).values("order").distinct().count()
+
+        # Revenue = 90% of item price * quantity (10% commission)
+        delivered_items = items.filter(order__status=Order.Status.DELIVERED)
+        lifetime_revenue_raw = delivered_items.aggregate(total=Sum(models.F('price') * models.F('quantity')))['total'] or 0
+        lifetime_revenue = float(lifetime_revenue_raw) * 0.9
+        
+        pending_items = items.exclude(order__status__in=[Order.Status.DELIVERED, Order.Status.CANCELLED])
+        pending_settlement_raw = pending_items.aggregate(total=Sum(models.F('price') * models.F('quantity')))['total'] or 0
+        pending_settlement = float(pending_settlement_raw) * 0.9
+
+        # Monthly Revenue
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        monthly_items = delivered_items.filter(order__created_at__gte=thirty_days_ago)
+        monthly_revenue_raw = monthly_items.aggregate(total=Sum(models.F('price') * models.F('quantity')))['total'] or 0
+        monthly_revenue = float(monthly_revenue_raw) * 0.9
+
+        return Response({
+            "total_products": total_products,
+            "active_products": active_products,
+            "out_of_stock_products": out_of_stock_products,
+            "total_orders": total_orders,
+            "pending_orders": pending_orders,
+            "lifetime_revenue": lifetime_revenue,
+            "monthly_revenue": monthly_revenue,
+            "pending_settlement": pending_settlement,
+        })
+
+class VendorEarningsView(APIView):
+    """GET /api/vendors/earnings/"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        items = OrderItem.objects.filter(product__owner=user).select_related("order", "product").order_by("-order__created_at")
+        
+        history = []
+        for item in items:
+            amount = item.price * item.quantity
+            commission = float(amount) * 0.10
+            vendor_earning = float(amount) * 0.90
+            history.append({
+                "id": item.id,
+                "order_id": item.order.id,
+                "product_name": item.product_name,
+                "date": item.order.created_at.strftime("%b %d, %Y"),
+                "amount": amount,
+                "commission": commission,
+                "vendor_earning": vendor_earning,
+                "status": item.order.status
+            })
+            
+        return Response(history)
+
+class VendorStoreView(APIView):
+    """GET / PUT /api/vendors/store/"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        store = Store.objects.filter(owner=request.user).first()
+        if not store:
+            return Response(None)
+        
+        return Response({
+            "id": store.id,
+            "store_name": store.store_name,
+            "description": store.description,
+            "logo": store.logo.url if store.logo else None,
+            "banner": store.banner.url if store.banner else None,
+            "address": store.address,
+            "phone": store.phone,
+            "email": store.email,
+        })
+
+    def put(self, request):
+        store, created = Store.objects.get_or_create(
+            owner=request.user,
+            defaults={"store_name": f"{request.user.name}'s Store"}
+        )
+        
+        data = request.data
+        if "store_name" in data: store.store_name = data["store_name"]
+        if "description" in data: store.description = data["description"]
+        if "address" in data: store.address = data["address"]
+        if "phone" in data: store.phone = data["phone"]
+        
+        if "logo" in request.FILES: store.logo = request.FILES["logo"]
+        if "banner" in request.FILES: store.banner = request.FILES["banner"]
+        
+        store.save()
+        return Response({"message": "Store updated successfully."})

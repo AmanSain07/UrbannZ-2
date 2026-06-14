@@ -63,10 +63,14 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     # Frontend-matched fields
+    brand = models.CharField(max_length=100, blank=True)
     gender = models.CharField(max_length=50, blank=True)    # Men, Women, Unisex
     style = models.CharField(max_length=100, blank=True)    # Street Style, Vintage, etc.
     occasion = models.CharField(max_length=100, blank=True) # Casual, Party, etc.
     tags = models.JSONField(default=list, blank=True)       # ["New", "Hot", "Limited"]
+    sizes = models.JSONField(default=list, blank=True)      # ["S", "M", "L"]
+    colors = models.JSONField(default=list, blank=True)     # ["Red", "Blue"]
+    discount_percent = models.PositiveIntegerField(default=0)
 
     # Main image URL (for fast loading / backward compat with Unsplash)
     image_url = models.URLField(blank=True)

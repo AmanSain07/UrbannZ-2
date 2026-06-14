@@ -34,6 +34,10 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
   const [formData, setFormData] = useState({
     name: "",
     price: "",
+    discount_percent: "0",
+    brand: "",
+    sizes: "",
+    colors: "",
     description: "",
     category: "",
     image_url: "",
@@ -53,6 +57,10 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
         setFormData({
           name: data.name || "",
           price: String(data.price || ""),
+          discount_percent: String(data.discount_percent || "0"),
+          brand: data.brand || "",
+          sizes: Array.isArray(data.sizes) ? data.sizes.join(", ") : (data.sizes || ""),
+          colors: Array.isArray(data.colors) ? data.colors.join(", ") : (data.colors || ""),
           description: data.description || "",
           category: String(data.category || ""),
           image_url: data.image_url || "",
@@ -77,6 +85,10 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
       const payload: any = {
         name: formData.name.trim(),
         price: parseFloat(formData.price),
+        discount_percent: parseInt(formData.discount_percent) || 0,
+        brand: formData.brand.trim(),
+        sizes: formData.sizes ? formData.sizes.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        colors: formData.colors ? formData.colors.split(",").map((t) => t.trim()).filter(Boolean) : [],
         description: formData.description.trim(),
         tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
         gender: formData.gender,
@@ -222,21 +234,6 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold ml-1">Price (₹) *</label>
-              <input
-                required
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-mono"
-              />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
               <label className="text-sm font-bold ml-1">Category</label>
               {categories.length > 0 ? (
                 <select
@@ -259,6 +256,11 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
               )}
             </div>
             <div className="space-y-2">
+              <label className="text-sm font-bold ml-1">Brand</label>
+              <input value={formData.brand} onChange={e => setFormData({ ...formData, brand: e.target.value })} placeholder="e.g. Nike"
+                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none" />
+            </div>
+            <div className="space-y-2">
               <label className="text-sm font-bold ml-1">Tags (comma separated)</label>
               <input
                 value={formData.tags}
@@ -269,7 +271,46 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-3 gap-4 mt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold ml-1">Price (₹) *</label>
+              <input
+                required
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-mono"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold ml-1">Discount (%)</label>
+              <input type="number" min="0" max="100" value={formData.discount_percent} onChange={e => setFormData({ ...formData, discount_percent: e.target.value })}
+                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 font-mono focus:ring-2 outline-none" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold ml-1">Stock Quantity</label>
+              <input type="number" min="0" value={formData.stock_quantity}
+                onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none font-mono" />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold ml-1">Sizes (comma separated)</label>
+              <input value={formData.sizes} onChange={e => setFormData({ ...formData, sizes: e.target.value })} placeholder="S, M, L"
+                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 outline-none" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold ml-1">Colors (comma separated)</label>
+              <input value={formData.colors} onChange={e => setFormData({ ...formData, colors: e.target.value })} placeholder="Red, Blue"
+                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 outline-none" />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 mt-4">
             <div className="space-y-2">
               <label className="text-sm font-bold ml-1">Gender</label>
               <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
@@ -290,24 +331,16 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-bold ml-1">Stock Quantity</label>
-              <input type="number" min="0" value={formData.stock_quantity}
-                onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                className="w-full p-3 rounded-xl bg-secondary/5 border border-border/50 focus:ring-2 focus:ring-primary/50 outline-none font-mono" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold ml-1">Availability</label>
-              <button type="button" onClick={() => setFormData({ ...formData, in_stock: !formData.in_stock })}
-                className={`w-full p-3 rounded-xl border font-bold text-sm transition-all
-                  ${formData.in_stock ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
-                {formData.in_stock ? "✓ In Stock" : "✗ Out of Stock"} — Click to toggle
-              </button>
-            </div>
+          <div className="space-y-2 mt-4">
+            <label className="text-sm font-bold ml-1">Availability</label>
+            <button type="button" onClick={() => setFormData({ ...formData, in_stock: !formData.in_stock })}
+              className={`w-full p-3 rounded-xl border font-bold text-sm transition-all
+                ${formData.in_stock ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
+              {formData.in_stock ? "✓ In Stock" : "✗ Out of Stock"} — Click to toggle
+            </button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 mt-4">
             <label className="text-sm font-bold ml-1">Description</label>
             <textarea required value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}

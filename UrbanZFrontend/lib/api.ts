@@ -373,6 +373,35 @@ export async function rejectVendorApplication(id: number, reason?: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Vendor Dashboard Features
+// ---------------------------------------------------------------------------
+export async function fetchVendorAnalytics() {
+  return apiFetch("/api/vendors/analytics/");
+}
+
+export async function fetchVendorEarnings() {
+  return apiFetch("/api/vendors/earnings/");
+}
+
+export async function fetchVendorStore() {
+  return apiFetch("/api/vendors/store/");
+}
+
+export async function updateVendorStore(data: FormData) {
+  const token = getAccessToken();
+  const res = await fetch(`${API_BASE_URL}/api/vendors/store/`, {
+    method: "PUT",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: data,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.detail || "Failed to update store");
+  }
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
 // Store APIs
 // ---------------------------------------------------------------------------
 export async function fetchPublicStores() {

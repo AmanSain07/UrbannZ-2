@@ -27,6 +27,10 @@ export default function Navbar() {
   const pathname = usePathname();
   const showBackButton = pathname !== "/";
 
+  // Strict role separation: hide customer navbar on vendor and admin views
+  if (pathname?.startsWith("/dashboard/shopkeeper") || pathname?.startsWith("/dashboard/admin")) {
+    return null;
+  }
 
   useEffect(() => {
     setIsMounted(true);

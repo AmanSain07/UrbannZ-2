@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently --names \"frontend,backend\" --prefix-colors \"cyan,yellow\" \"next dev\" \"cd ../UrbanZBackend && .venv\\Scripts\\python.exe manage.py runserver 8000\"",
-    "dev:frontend": "next dev",
+    "dev": "concurrently --names \"frontend,backend\" --prefix-colors \"cyan,yellow\" \"next dev --webpack\" \"cd ../UrbanZBackend && .venv\\Scripts\\python.exe manage.py runserver 8000\"",
+    "dev:frontend": "next dev --webpack",
     "dev:backend": "cd ../UrbanZBackend && .venv\\Scripts\\python.exe manage.py runserver 8000",
     "build": "next build",
     "start": "next start",
